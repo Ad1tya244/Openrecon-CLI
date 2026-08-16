@@ -24,12 +24,13 @@ ENV/
 *.pem
 *.key
 
-# Output exports & scratch
+# Output exports & temporary files
 scratch/
 *.log
-results.json
 results.txt
+report.txt
 scan_results.*
+*.json
 
 # Testing & Coverage
 .coverage

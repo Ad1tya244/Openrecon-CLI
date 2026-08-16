@@ -86,7 +86,7 @@ def _print_kv(key: str, value: str, indent: int = 4, key_width: int = 16, max_wi
 
 def render_dns(data: Dict[str, Any]):
     if not data or "error" in data:
-        console.print(f"[bold cyan][+][/bold cyan] [bold]DNS[/bold]\n    [red]Error: {data.get('error', 'No data')}[/red]\n")
+        console.print(f"[bold cyan][+][/bold cyan] [bold]DNS[/bold]\\n    [red]Error: {data.get('error', 'No data')}[/red]\\n")
         return
 
     console.print("[bold cyan][+][/bold cyan] [bold]DNS[/bold]")
@@ -96,44 +96,44 @@ def render_dns(data: Dict[str, Any]):
             _print_kv(rtype, ", ".join(records))
 
     for rtype, records in data.items():
-        if rtype not in ("A", "AAAA", "CNAME", "MX", "NS", "SOA", "TXT", "email_security", "flags", "domain") and isinstance(records, list) and records:
+        if rtype not in ("A", "AAAA", "CNAME", "MX", "NS", "SOA", "TXT", "email_security", "flags", "domain", "module_key", "name") and isinstance(records, list) and records:
             _print_kv(rtype, ", ".join(str(r) for r in records))
 
-    console.print("")
+def render_email(data: Dict[str, Any]):
+    if not data or "error" in data:
+        console.print(f"[bold cyan][+][/bold cyan] [bold]Email Security[/bold]\\n    [red]Error: {data.get('error', 'No data')}[/red]\\n")
+        return
 
-    # Dedicated Email Security Section
-    email_sec = data.get("email_security", {})
-    if email_sec:
-        console.print("[bold cyan][+][/bold cyan] [bold]Email Security[/bold]")
-        spf = email_sec.get("spf", {})
-        spf_present = spf.get("present", False)
-        _print_kv("SPF Record", _colorize_status("PRESENT" if spf_present else "MISSING"))
+    console.print("[bold cyan][+][/bold cyan] [bold]Email Security[/bold]")
+    spf = data.get("spf", {})
+    spf_present = spf.get("present", False)
+    _print_kv("SPF Record", _colorize_status("PRESENT" if spf_present else "MISSING"))
+    
+    spf_status = str(spf.get("status", "N/A")).upper()
+    if "STRICT" in spf_status:
+        _print_kv("SPF Status", _colorize_status("STRICT"))
+    elif "SOFT" in spf_status:
+        _print_kv("SPF Status", _colorize_status("SOFTFAIL"))
+    elif "OVER-PERMISSIVE" in spf_status:
+        _print_kv("SPF Status", _colorize_status("OVER-PERMISSIVE"))
+    elif spf_present:
+        _print_kv("SPF Status", _colorize_status(spf_status))
+    else:
+        _print_kv("SPF Status", _colorize_status("NONE"))
         
-        spf_status = spf.get("status", "N/A").upper()
-        if "STRICT" in spf_status:
-            _print_kv("SPF Status", _colorize_status("STRICT"))
-        elif "SOFT" in spf_status:
-            _print_kv("SPF Status", _colorize_status("SOFTFAIL"))
-        elif "OVER-PERMISSIVE" in spf_status:
-            _print_kv("SPF Status", _colorize_status("OVER-PERMISSIVE"))
-        elif spf_present:
-            _print_kv("SPF Status", _colorize_status(spf_status))
-        else:
-            _print_kv("SPF Status", _colorize_status("NONE"))
-            
-        if spf.get("record"):
-            _print_kv("SPF Value", spf["record"])
+    if spf.get("record"):
+        _print_kv("SPF Value", spf["record"])
 
-        dmarc = email_sec.get("dmarc", {})
-        dmarc_present = dmarc.get("present", False)
-        _print_kv("DMARC Record", _colorize_status("PRESENT" if dmarc_present else "MISSING"))
-        
-        dmarc_policy = (dmarc.get("policy") or "NONE").upper()
-        _print_kv("DMARC Policy", _colorize_status(dmarc_policy) if dmarc_present else _colorize_status("NONE"))
+    dmarc = data.get("dmarc", {})
+    dmarc_present = dmarc.get("present", False)
+    _print_kv("DMARC Record", _colorize_status("PRESENT" if dmarc_present else "MISSING"))
+    
+    dmarc_policy = (dmarc.get("policy") or "NONE").upper()
+    _print_kv("DMARC Policy", _colorize_status(dmarc_policy) if dmarc_present else _colorize_status("NONE"))
 
-        dkim = email_sec.get("dkim_dns_check", {})
-        dkim_found = dkim.get("_domainkey_exists", False)
-        _print_kv("DKIM", _colorize_status("PRESENT" if dkim_found else "NOT ENUMERATED"))
+    dkim = data.get("dkim_dns_check", {})
+    dkim_found = dkim.get("_domainkey_exists", False)
+    _print_kv("DKIM", _colorize_status("PRESENT" if dkim_found else "NOT ENUMERATED"))
 
 def render_whois(data: Dict[str, Any]):
     if not data or "error" in data:
@@ -452,6 +452,7 @@ RENDER_MAP = {
     "dns": render_dns,
     "whois": render_whois,
     "ssl": render_ssl,
+    "email": render_email,
     "headers": render_headers,
     "security-headers": render_security_headers,
     "subdomains": render_subdomains,

@@ -5,7 +5,7 @@ OpenRecon Reconnaissance Modules.
 MODULE_REGISTRY = {
     "dns": {
         "name": "DNS Recon",
-        "description": "Standard DNS records (A, AAAA, CNAME, MX, NS, TXT, SOA) & email security (SPF/DMARC)",
+        "description": "Standard DNS records (A, AAAA, CNAME, MX, NS, TXT, SOA)",
         "module": "openrecon.modules.dns_recon",
         "func": "get_dns_records",
         "async": False
@@ -22,6 +22,13 @@ MODULE_REGISTRY = {
         "description": "SSL/TLS certificate validity, issuer, dates, SANs, and cipher suite details",
         "module": "openrecon.modules.ssl_recon",
         "func": "analyze_ssl",
+        "async": False
+    },
+    "email": {
+        "name": "Email Security",
+        "description": "Email security posture (SPF records, DMARC policy, DKIM broad check)",
+        "module": "openrecon.modules.email_recon",
+        "func": "analyze_email_security",
         "async": False
     },
     "headers": {
