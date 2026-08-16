@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openrecon"
+version = "1.0.0"
+description = "Fast, modular, and local OSINT reconnaissance CLI tool"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "OpenRecon Team" }
+]
+license = { text = "MIT" }
+keywords = ["osint", "reconnaissance", "security", "subdomain", "dns", "ssl", "cli"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Information Technology",
+    "Topic :: Security",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "dnspython>=2.6.1",
+    "httpx>=0.27.0",
+    "cryptography>=42.0.2",
+    "rich>=13.0.0",
+]
+
+[project.scripts]
+openrecon = "openrecon.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["openrecon*"]
+
+[tool.setuptools.package-data]
+openrecon = ["data/*.json"]
