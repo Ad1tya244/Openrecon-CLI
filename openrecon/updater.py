@@ -1,7 +1,7 @@
 """
-Opt-in automatic update installer for OpenRecon.
+Simplified, safe opt-in automatic updater for OpenRecon.
+Uses GitHub Releases / Tags as the primary update source.
 Runs only when explicitly invoked via `openrecon --check-update`.
-Provides precise, actionable diagnostic error reporting without exposing stack traces.
 """
 import os
 import sys
@@ -9,7 +9,7 @@ import re
 import hashlib
 import tempfile
 import subprocess
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional, Tuple, Dict, Any, List
 from urllib.parse import urlparse
 import httpx
 from openrecon import __version__
@@ -136,14 +136,14 @@ def fetch_latest_release_info(
     timeout: float = settings.UPDATE_TIMEOUT_SECONDS
 ) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
     """
-    Fetches the latest official GitHub Release metadata from:
-      https://api.github.com/repos/{repo}/releases/latest
+    Fetches the latest official GitHub Release metadata or highest semantic-version tag:
+      1. Tries /releases/latest for published Releases.
+      2. If 404 (no published Release), queries /tags and selects the highest valid SemVer tag.
     Returns (release_data, error_message).
     """
     if not validate_repo(repo):
         return None, f"Invalid or untrusted repository: '{repo}'"
 
-    url = f"https://api.github.com/repos/{repo}/releases/latest"
     headers = {
         "Accept": "application/vnd.github.v3+json",
         "User-Agent": f"OpenRecon/{__version__}"
@@ -151,13 +151,15 @@ def fetch_latest_release_info(
 
     try:
         with httpx.Client(timeout=timeout, follow_redirects=True, verify=True) as client:
-            resp = client.get(url, headers=headers)
+            # 1. Try /releases/latest
+            release_url = f"https://api.github.com/repos/{repo}/releases/latest"
+            resp = client.get(release_url, headers=headers)
 
             if resp.status_code == 200:
                 try:
                     data = resp.json()
                 except Exception:
-                    return None, "GitHub API returned invalid JSON response."
+                    return None, "GitHub API returned invalid JSON response for release."
 
                 tag_name = data.get("tag_name")
                 if not tag_name or not isinstance(tag_name, str):
@@ -169,31 +171,55 @@ def fetch_latest_release_info(
                 return data, None
 
             elif resp.status_code == 404:
-                # Fallback check on tags endpoint
+                # 2. Fallback to /tags to look for published SemVer tags
                 tags_url = f"https://api.github.com/repos/{repo}/tags"
                 tags_resp = client.get(tags_url, headers=headers)
+
                 if tags_resp.status_code == 200:
                     try:
                         tags_data = tags_resp.json()
                     except Exception:
                         return None, "GitHub API returned invalid JSON response for tags."
 
-                    if isinstance(tags_data, list) and len(tags_data) > 0:
-                        first_tag = tags_data[0].get("name")
-                        if first_tag and parse_semver(first_tag) is not None:
-                            return {"tag_name": first_tag, "assets": [], "body": ""}, None
-                        elif first_tag:
-                            return None, f"Tag '{first_tag}' is not a valid semantic version."
-                    return None, "GitHub API returned HTTP 404 (release not found)."
+                    if not isinstance(tags_data, list) or len(tags_data) == 0:
+                        # No tags exist yet -> treated cleanly as up to date
+                        return None, None
 
+                    # Filter and select the highest valid semantic-version tag
+                    valid_tags = []
+                    for t in tags_data:
+                        t_name = t.get("name") if isinstance(t, dict) else None
+                        if t_name:
+                            parsed = parse_semver(t_name)
+                            if parsed is not None:
+                                valid_tags.append((parsed, t_name.strip()))
+
+                    if not valid_tags:
+                        # No valid semver tags found -> treated cleanly as up to date
+                        return None, None
+
+                    # Sort by parsed semver tuple (major, minor, patch) in descending order
+                    valid_tags.sort(key=lambda x: x[0], reverse=True)
+                    highest_tag_tuple, highest_tag_name = valid_tags[0]
+
+                    return {
+                        "tag_name": highest_tag_name,
+                        "assets": [],
+                        "body": ""
+                    }, None
+
+                elif tags_resp.status_code == 404:
+                    return None, f"GitHub repository '{repo}' not found (HTTP 404)."
                 elif tags_resp.status_code == 403:
                     if tags_resp.headers.get("x-ratelimit-remaining") == "0":
                         return None, "GitHub API request failed: HTTP 429 (rate limit exceeded)."
                     return None, "GitHub API returned HTTP 403 (access forbidden)."
                 elif tags_resp.status_code == 429:
                     return None, "GitHub API request failed: HTTP 429 (rate limit exceeded)."
+                elif tags_resp.status_code >= 500:
+                    return None, f"GitHub API returned server error (HTTP {tags_resp.status_code})."
                 else:
-                    return None, "GitHub API returned HTTP 404 (release not found)."
+                    return None, f"GitHub API returned unexpected status (HTTP {tags_resp.status_code})."
 
             elif resp.status_code == 403:
                 if resp.headers.get("x-ratelimit-remaining") == "0":
@@ -213,7 +239,7 @@ def fetch_latest_release_info(
         return None, "GitHub API request timed out."
     except httpx.ConnectError:
         return None, "Could not connect to GitHub (network/DNS failure)."
-    except (httpx.TLSAttributeError, httpx.RequestError) as e:
+    except httpx.RequestError as e:
         err_str = str(e).lower()
         if "certificate" in err_str or "ssl" in err_str or "tls" in err_str:
             return None, "TLS verification failed while connecting to GitHub."
@@ -277,9 +303,9 @@ def install_update(
     release_info: Optional[Dict[str, Any]] = None
 ) -> bool:
     """
-    Safely downloads and installs the updated version using pip from a local verified artifact.
-    Upgrades only OpenRecon and its declared dependencies without modifying unrelated packages.
-    Preserves the existing installation intact if update fails at any step.
+    Safely downloads and installs the updated version directly from the official GitHub
+    release tag archive using pip. Upgrades OpenRecon and newly declared requirements.
+    Preserves the existing installation intact if update fails.
     """
     if not validate_repo(repo):
         return False
@@ -287,15 +313,7 @@ def install_update(
     clean_tag = target_tag.strip()
     official_archive_url = f"https://github.com/{repo}/archive/refs/tags/{clean_tag}.tar.gz"
     
-    expected_sha256 = None
-    if release_info:
-        body = release_info.get("body", "")
-        expected_sha256 = extract_sha256_checksum(body, f"{clean_tag}.tar.gz")
-        if not expected_sha256:
-            expected_sha256 = extract_sha256_checksum(body)
-
-    tmp_path = download_and_verify_artifact(official_archive_url, expected_sha256=expected_sha256)
-    if not tmp_path:
+    if not validate_download_url(official_archive_url):
         return False
 
     cmd = [
@@ -307,7 +325,7 @@ def install_update(
         "--upgrade-strategy",
         "only-if-needed",
         "--no-cache-dir",
-        tmp_path
+        official_archive_url
     ]
 
     try:
@@ -321,12 +339,6 @@ def install_update(
         return proc.returncode == 0
     except Exception:
         return False
-    finally:
-        if os.path.exists(tmp_path):
-            try:
-                os.remove(tmp_path)
-            except Exception:
-                pass
 
 def verify_installed_version(expected_version: str) -> bool:
     """Verifies that the expected version is installed after an update."""
@@ -349,12 +361,15 @@ def run_opt_in_update_check(
     console.print(f"OpenRecon v{current_version}")
 
     release_info, error_msg = fetch_latest_release_info(repo=repo)
-    if error_msg or not release_info or not release_info.get("tag_name"):
-        err = error_msg or "Release metadata unavailable."
-        console.print(f"[yellow][!] {err}[/yellow]")
+    if error_msg:
+        console.print(f"[yellow][!] {error_msg}[/yellow]")
         return None
 
-    latest_tag = release_info["tag_name"].strip()
+    latest_tag = release_info.get("tag_name") if release_info else None
+    if not latest_tag:
+        console.print("OpenRecon is up to date. No updates available.")
+        return None
+
     clean_latest = latest_tag.lstrip("vV")
 
     # Version comparison
@@ -385,5 +400,5 @@ def run_opt_in_update_check(
         else:
             return None
     else:
-        console.print("OpenRecon is up to date.")
+        console.print("OpenRecon is up to date. No updates available.")
         return None

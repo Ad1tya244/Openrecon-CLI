@@ -17,6 +17,8 @@ venv/
 .venv/
 env/
 ENV/
+env.bak/
+venv.bak/
 
 # Environment variables & secrets
 .env
@@ -32,24 +34,26 @@ report.txt
 scan_results.*
 *.tmp
 
-# User Cache Directory
+# User & Test Caches
 .cache/
 .openrecon_cache.json
-
-# Whitelist Package Data
-!openrecon/data/*.json
-
-# Testing & Coverage
 .coverage
 htmlcov/
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
 
-# OS / Editor
+# OS / Editor files
 .DS_Store
 .AppleDouble
 .LSOverride
 .vscode/
 .idea/
+*.swp
+*.swo
 Thumbs.db
 .Trashes
+
+# Whitelist Package Data & Assets
+!openrecon/data/*.json
+!assets/*

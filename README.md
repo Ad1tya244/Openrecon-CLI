@@ -43,7 +43,7 @@ It performs passive, targeted reconnaissance against target domains and IP addre
 *   **🌍 IP & Infrastructure Intelligence**: Geolocation, ISP classification, Autonomous System Number (ASN), Provider, and Cloud/Hosting categorization.
 *   **✨ Clean Terminal UX**: TrueColor ANSI banner with transparent terminal background support and clean aligned output.
 *   **💾 Text Report Export**: Direct export of structured scan results to formatted text reports (`.txt` only).
-*   **🔄 Opt-In Updater**: Check for official GitHub releases on demand with cryptographic SHA-256 verification and zero startup latency.
+*   **🔄 Simple Opt-In GitHub Updater**: Check and install official GitHub releases or tags on demand (`openrecon --check-update`) with zero startup latency for normal scans.
 
 ---
 
@@ -89,10 +89,10 @@ openrecon example.com -t 120
 # 5. List all available reconnaissance modules
 openrecon list-modules
 
-# 6. Opt-In manual update check
+# 6. Opt-In manual update check (checks official GitHub releases/tags)
 openrecon --check-update
 
-# 7. Check version and help
+# 7. Check version and help (100% network-free)
 openrecon --version
 openrecon --help
 ```
