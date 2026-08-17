@@ -1,7 +1,8 @@
 """
-Simplified, safe opt-in automatic updater for OpenRecon.
-Uses GitHub Releases / Tags as the primary update source.
+Opt-in automatic updater for OpenRecon.
 Runs only when explicitly invoked via `openrecon --check-update`.
+When confirmed by the user (y/Y), automatically installs the official update into
+the current environment without requiring manual git/download/reinstall steps.
 """
 import os
 import sys
@@ -55,29 +56,6 @@ def validate_download_url(url: str) -> bool:
         return True
     except Exception:
         return False
-
-def is_source_checkout() -> bool:
-    """
-    Detects if OpenRecon is running from a local Git or source repository checkout.
-    When running from source, working trees must NEVER be modified automatically.
-    """
-    try:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        check_dir = current_dir
-        for _ in range(3):
-            if os.path.isdir(os.path.join(check_dir, ".git")):
-                return True
-            parent = os.path.dirname(check_dir)
-            if parent == check_dir:
-                break
-            check_dir = parent
-    except Exception:
-        pass
-
-    if os.path.isdir(".git") and os.path.isdir("openrecon"):
-        return True
-
-    return False
 
 def parse_semver(v: str) -> Optional[Tuple[int, int, int]]:
     """
@@ -303,9 +281,9 @@ def install_update(
     release_info: Optional[Dict[str, Any]] = None
 ) -> bool:
     """
-    Safely downloads and installs the updated version directly from the official GitHub
-    release tag archive using pip. Upgrades OpenRecon and newly declared requirements.
-    Preserves the existing installation intact if update fails.
+    Safely downloads and installs the updated version into the current environment using pip.
+    Upgrades OpenRecon without modifying unrelated dependencies or executing Git commands.
+    Preserves the existing installation intact if update fails at any step.
     """
     if not validate_repo(repo):
         return False
@@ -316,6 +294,21 @@ def install_update(
     if not validate_download_url(official_archive_url):
         return False
 
+    expected_sha256 = None
+    if release_info:
+        body = release_info.get("body", "")
+        expected_sha256 = extract_sha256_checksum(body, f"{clean_tag}.tar.gz")
+        if not expected_sha256:
+            expected_sha256 = extract_sha256_checksum(body)
+
+    tmp_path = download_and_verify_artifact(official_archive_url, expected_sha256=expected_sha256)
+    
+    # If checksum verification was requested and failed, abort installation
+    if expected_sha256 and not tmp_path:
+        return False
+
+    target_to_install = tmp_path if tmp_path else official_archive_url
+
     cmd = [
         sys.executable,
         "-m",
@@ -325,7 +318,7 @@ def install_update(
         "--upgrade-strategy",
         "only-if-needed",
         "--no-cache-dir",
-        official_archive_url
+        target_to_install
     ]
 
     try:
@@ -339,6 +332,12 @@ def install_update(
         return proc.returncode == 0
     except Exception:
         return False
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except Exception:
+                pass
 
 def verify_installed_version(expected_version: str) -> bool:
     """Verifies that the expected version is installed after an update."""
@@ -356,6 +355,7 @@ def run_opt_in_update_check(
 ) -> Optional[str]:
     """
     Opt-in update check invoked ONLY by `openrecon --check-update`.
+    When an update exists and user confirms (y/Y), performs full automatic update.
     """
     current_version = __version__
     console.print(f"OpenRecon v{current_version}")
@@ -375,10 +375,6 @@ def run_opt_in_update_check(
     # Version comparison
     if is_newer_version(clean_latest, current_version):
         console.print(f"Update available: v{clean_latest}\n")
-        
-        if is_source_checkout():
-            console.print("Please update the source checkout manually.\n")
-            return clean_latest
 
         # Prompt user before installation
         get_input = prompt_fn or input

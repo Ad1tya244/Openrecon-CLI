@@ -1,6 +1,6 @@
 """
 Complete isolated integration test suite for the OpenRecon opt-in automatic updater.
-Verifies interactive prompting, secure package installation, and isolated checks.
+Verifies interactive prompting, automatic package installation, and isolated checks.
 """
 import unittest
 import tempfile
@@ -67,9 +67,8 @@ openrecon = "openrecon:main"
         Full opt-in lifecycle test:
         1. Query mock v99.0.0 release
         2. Prompt user: confirm 'y'
-        3. Download & verify SHA-256
-        4. Install to test environment
-        5. Verify version reporting & artifact cleanup
+        3. Automatically download & install artifact
+        4. Verify version reporting
         """
         target_version = "99.0.0"
         mock_release = {
@@ -77,13 +76,10 @@ openrecon = "openrecon:main"
             "body": f"Release v{target_version}\nSHA256: {self.tar_sha256}\n"
         }
 
-        mock_resp = MagicMock()
-        mock_resp.status_code = 200
-        mock_resp.content = self.tar_bytes
+        mock_resp = MagicMock(status_code=200, content=self.tar_bytes)
 
         with patch("openrecon.updater.fetch_latest_release_info", return_value=(mock_release, None)), \
              patch("httpx.Client.get", return_value=mock_resp), \
-             patch("openrecon.updater.is_source_checkout", return_value=False), \
              patch("subprocess.run", return_value=MagicMock(returncode=0)) as mock_subproc, \
              patch("openrecon.updater.verify_installed_version", return_value=True):
             
@@ -93,9 +89,7 @@ openrecon = "openrecon:main"
 
     def test_checksum_mismatch_rejection(self):
         """Verify that corrupted or tampered artifacts are rejected and cleaned up."""
-        mock_resp = MagicMock()
-        mock_resp.status_code = 200
-        mock_resp.content = self.tar_bytes
+        mock_resp = MagicMock(status_code=200, content=self.tar_bytes)
 
         with patch("httpx.Client.get", return_value=mock_resp):
             valid_url = f"https://github.com/{OFFICIAL_REPO}/archive/refs/tags/v99.0.0.tar.gz"

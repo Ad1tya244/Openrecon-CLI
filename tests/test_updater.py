@@ -13,7 +13,6 @@ from openrecon.updater import (
     validate_download_url,
     compute_sha256,
     extract_sha256_checksum,
-    is_source_checkout,
     fetch_latest_release_info,
     fetch_latest_version,
     download_and_verify_artifact,
@@ -23,7 +22,7 @@ from openrecon.updater import (
 )
 from openrecon.cli import build_parser, main
 
-class TestOptInUpdaterReleaseWorkflow(unittest.TestCase):
+class TestOptInUpdaterAutomaticWorkflow(unittest.TestCase):
     def test_version_comparison_and_malformed(self):
         """Test semantic version parsing and comparison resilience."""
         self.assertEqual(parse_semver("1.4.0"), (1, 4, 0))
@@ -124,15 +123,22 @@ class TestOptInUpdaterReleaseWorkflow(unittest.TestCase):
         self.assertFalse(validate_download_url("ftp://github.com/Ad1tya244/Openrecon-CLI"))
         self.assertFalse(validate_download_url(""))
 
-    def test_prompt_user_confirmation_yes_installs(self):
-        """Test that entering 'y' / 'Y' triggers installation and verification."""
+    def test_prompt_user_confirmation_yes_performs_automatic_update(self):
+        """Test that entering 'y' / 'Y' triggers automatic download, installation, and verification."""
         mock_release = {"tag_name": "v99.0.0", "body": ""}
         with patch("openrecon.updater.fetch_latest_release_info", return_value=(mock_release, None)), \
-             patch("openrecon.updater.is_source_checkout", return_value=False), \
              patch("openrecon.updater.install_update", return_value=True) as mock_install, \
              patch("openrecon.updater.verify_installed_version", return_value=True) as mock_verify:
-            res = run_opt_in_update_check(prompt_fn=lambda _: "y")
-            self.assertEqual(res, "99.0.0")
+            res_y = run_opt_in_update_check(prompt_fn=lambda _: "y")
+            self.assertEqual(res_y, "99.0.0")
+            mock_install.assert_called_once()
+            mock_verify.assert_called_once()
+
+        with patch("openrecon.updater.fetch_latest_release_info", return_value=(mock_release, None)), \
+             patch("openrecon.updater.install_update", return_value=True) as mock_install, \
+             patch("openrecon.updater.verify_installed_version", return_value=True) as mock_verify:
+            res_Y = run_opt_in_update_check(prompt_fn=lambda _: "Y")
+            self.assertEqual(res_Y, "99.0.0")
             mock_install.assert_called_once()
             mock_verify.assert_called_once()
 
@@ -140,7 +146,6 @@ class TestOptInUpdaterReleaseWorkflow(unittest.TestCase):
         """Test that entering 'n', 'N', or pressing Enter (blank) skips installation cleanly."""
         mock_release = {"tag_name": "v99.0.0", "body": ""}
         with patch("openrecon.updater.fetch_latest_release_info", return_value=(mock_release, None)), \
-             patch("openrecon.updater.is_source_checkout", return_value=False), \
              patch("openrecon.updater.install_update") as mock_install:
             
             res_n = run_opt_in_update_check(prompt_fn=lambda _: "n")
@@ -155,15 +160,37 @@ class TestOptInUpdaterReleaseWorkflow(unittest.TestCase):
             self.assertIsNone(res_empty)
             mock_install.assert_not_called()
 
-    def test_source_checkout_protection_prompts_manual_update(self):
-        """Test that running from a source checkout never touches files and prompts manual update."""
-        mock_release = {"tag_name": "v99.0.0", "body": ""}
-        with patch("openrecon.updater.fetch_latest_release_info", return_value=(mock_release, None)), \
-             patch("openrecon.updater.is_source_checkout", return_value=True), \
-             patch("openrecon.updater.install_update") as mock_install:
-            res = run_opt_in_update_check()
-            self.assertEqual(res, "99.0.0")
-            mock_install.assert_not_called()
+    def test_checksum_verification_when_provided(self):
+        """Test extracting and verifying SHA-256 checksums."""
+        sample_bytes = b"safe OpenRecon test package content"
+        correct_hash = compute_sha256(sample_bytes)
+        
+        body_text = f"Release v1.5.0\nSHA256: {correct_hash}\n"
+        extracted = extract_sha256_checksum(body_text)
+        self.assertEqual(extracted, correct_hash)
+
+        mock_resp = MagicMock(status_code=200, content=sample_bytes)
+
+        with patch("httpx.Client.get", return_value=mock_resp):
+            valid_url = f"https://github.com/{OFFICIAL_REPO}/archive/refs/tags/v1.5.0.tar.gz"
+            tmp_file = download_and_verify_artifact(valid_url, expected_sha256=correct_hash)
+            self.assertIsNotNone(tmp_file)
+            if tmp_file and os.path.exists(tmp_file):
+                os.remove(tmp_file)
+
+    def test_checksum_mismatch_fails_installation(self):
+        """Test that installation fails and cleans up when SHA-256 hash does not match."""
+        sample_bytes = b"tampered package content"
+        wrong_hash = "a" * 64
+        mock_release = {"tag_name": "v1.5.0", "body": f"SHA256: {wrong_hash}"}
+
+        mock_resp = MagicMock(status_code=200, content=sample_bytes)
+
+        with patch("httpx.Client.get", return_value=mock_resp), \
+             patch("subprocess.run") as mock_subproc:
+            success = install_update(OFFICIAL_REPO, "v1.5.0", release_info=mock_release)
+            self.assertFalse(success)
+            mock_subproc.assert_not_called()
 
     def test_diagnostic_error_timeout(self):
         """Test diagnostic error for request timeout."""
@@ -181,10 +208,7 @@ class TestOptInUpdaterReleaseWorkflow(unittest.TestCase):
 
     def test_diagnostic_error_http_403(self):
         """Test diagnostic error for HTTP 403."""
-        mock_resp = MagicMock()
-        mock_resp.status_code = 403
-        mock_resp.headers = {"x-ratelimit-remaining": "10"}
-
+        mock_resp = MagicMock(status_code=403, headers={"x-ratelimit-remaining": "10"})
         with patch("httpx.Client.get", return_value=mock_resp):
             data, err = fetch_latest_release_info()
             self.assertIsNone(data)
@@ -211,7 +235,6 @@ class TestOptInUpdaterReleaseWorkflow(unittest.TestCase):
         """Test diagnostic error when GitHub returns invalid JSON."""
         mock_resp = MagicMock(status_code=200)
         mock_resp.json.side_effect = ValueError("Invalid JSON")
-
         with patch("httpx.Client.get", return_value=mock_resp):
             data, err = fetch_latest_release_info()
             self.assertIsNone(data)
