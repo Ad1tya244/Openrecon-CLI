@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import shutil
 import argparse
 import asyncio
 from typing import List, Optional, Tuple
@@ -10,6 +11,7 @@ from openrecon.utils.input_validator import validate_target
 from openrecon.utils.dotenv import load_dotenv
 from openrecon.modules import MODULE_REGISTRY
 from openrecon.engine import ScanEngine
+from openrecon.updater import run_opt_in_update_check
 from openrecon.formatter import (
     console,
     err_console,
@@ -22,7 +24,7 @@ from openrecon.formatter import (
 load_dotenv()
 
 def format_modules_help() -> str:
-    """Dynamically generate help text for -m / --module from MODULE_REGISTRY."""
+    """Dynamically generate help text for -m / --modules from MODULE_REGISTRY."""
     lines = ["Comma-separated list of modules to run.", "Available modules:"]
     max_key_len = max(len(k) for k in MODULE_REGISTRY) + 2
     for k, v in MODULE_REGISTRY.items():
@@ -79,8 +81,6 @@ def print_unsupported_output_error(ext: str):
     err_console.print(f"[bold red][!] Unsupported output format:[/bold red] {ext}")
     err_console.print("    OpenRecon supports only .txt output files.\n")
 
-import shutil
-
 class OpenReconHelpFormatter(argparse.RawTextHelpFormatter):
     """
     Custom help formatter that uses a consistent description column
@@ -120,6 +120,8 @@ Examples:
     parser.add_argument("-m", "--modules", dest="module", help=format_modules_help())
     parser.add_argument("-o", "--output", help="Save scan results to a text file (.txt only)")
     parser.add_argument("-t", "--timeout", type=float, default=settings.MODULE_TIMEOUT, help=f"Timeout per module in seconds (default: {timeout_default}s)")
+    parser.add_argument("--check-update", action="store_true", help="Check for available updates and exit")
+    parser.add_argument("--no-update", action="store_true", help="Skip automatic update check for this invocation")
 
     return parser
 
@@ -187,6 +189,11 @@ def main(args_list: Optional[List[str]] = None):
     args = parser.parse_args(raw_args)
 
     try:
+        # Check for explicit update check flag (--check-update)
+        if args.check_update:
+            run_opt_in_update_check()
+            sys.exit(0)
+
         # Check for explicit --help / -h
         if args.help:
             print_help_with_banner(parser)

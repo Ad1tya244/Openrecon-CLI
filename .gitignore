@@ -24,13 +24,20 @@ ENV/
 *.pem
 *.key
 
-# Output exports & temporary files
+# Output exports, scratch, & temporary artifacts
 scratch/
 *.log
 results.txt
 report.txt
 scan_results.*
-*.json
+*.tmp
+
+# User Cache Directory
+.cache/
+.openrecon_cache.json
+
+# Whitelist Package Data
+!openrecon/data/*.json
 
 # Testing & Coverage
 .coverage

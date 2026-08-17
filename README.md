@@ -42,7 +42,8 @@ It performs passive, targeted reconnaissance against target domains and IP addre
 *   **🔌 Port Reconnaissance**: Fast, concurrent TCP banner inspection of top common service ports (`80`, `443`, `22`, `21`, `25`, `53`, `3306`, `8080`, `8443`).
 *   **🌍 IP & Infrastructure Intelligence**: Geolocation, ISP classification, Autonomous System Number (ASN), Provider, and Cloud/Hosting categorization.
 *   **✨ Clean Terminal UX**: TrueColor ANSI banner with transparent terminal background support and clean aligned output.
-*   **💾 Text Report Export**: Direct export of structured scan results to formatted text reports (`.txt`).
+*   **💾 Text Report Export**: Direct export of structured scan results to formatted text reports (`.txt` only).
+*   **🔄 Opt-In Updater**: Check for official GitHub releases on demand with cryptographic SHA-256 verification and zero startup latency.
 
 ---
 
@@ -78,7 +79,7 @@ openrecon example.com -m dns,ssl,headers
 openrecon example.com -m dns,email,whois
 openrecon example.com -m tech,directories,public-files
 
-# 3. Export scan results to a text file (-o / --output)
+# 3. Export scan results to a text file (-o / --output, .txt only)
 openrecon example.com -o results.txt
 openrecon example.com -m tech,dns -o report.txt
 
@@ -88,7 +89,10 @@ openrecon example.com -t 120
 # 5. List all available reconnaissance modules
 openrecon list-modules
 
-# 6. Check version and help
+# 6. Opt-In manual update check
+openrecon --check-update
+
+# 7. Check version and help
 openrecon --version
 openrecon --help
 ```
@@ -116,7 +120,7 @@ openrecon --help
 
 ## 🧪 Running Tests
 
-OpenRecon includes a comprehensive automated test suite covering all modules, version tracking, CLI options, and technology fingerprint regression tests:
+OpenRecon includes a comprehensive automated test suite covering all modules, version tracking, CLI options, updater diagnostics, and technology fingerprint regression tests:
 
 ```bash
 python -m unittest discover tests
