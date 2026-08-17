@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <strong>Fast, Modular, Lightweight Local OSINT & Reconnaissance CLI</strong>
+  <strong>OSINT based Passive Reconnaissance</strong>
 </p>
 
 <p align="center">
@@ -72,7 +72,7 @@ After installation, the `openrecon` command is available directly in your termin
 # 1. Full reconnaissance scan (runs all 12 modules concurrently)
 openrecon example.com
 
-# 2. Targeted module scan (-m / --module)
+# 2. Targeted module scan (-m / --modules)
 openrecon example.com -m tech
 openrecon example.com -m dns,ssl,headers
 openrecon example.com -m dns,email,whois

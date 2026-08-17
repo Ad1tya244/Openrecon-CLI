@@ -100,22 +100,24 @@ def build_parser() -> argparse.ArgumentParser:
     timeout_default = int(settings.MODULE_TIMEOUT) if settings.MODULE_TIMEOUT.is_integer() else settings.MODULE_TIMEOUT
     parser = OpenReconArgumentParser(
         prog="openrecon",
-        description="OpenRecon - Local OSINT & Reconnaissance CLI",
+        description="OpenRecon - OSINT based Passive Reconnaissance",
         formatter_class=OpenReconHelpFormatter,
         add_help=False,
         epilog="""
+Module Reference:
+  openrecon list-modules List all available modules and descriptions
+
 Examples:
   openrecon example.com
   openrecon example.com -m dns,ssl,tech
   openrecon example.com -o results.txt
-  openrecon list-modules
 """
     )
 
     parser.add_argument("-h", "--help", action="store_true", help="Show this help message and exit")
-    parser.add_argument("-v", "--version", action="version", version=f"%(prog)s v{__version__}")
+    parser.add_argument("-v", "--version", action="version", version=f"%(prog)s v{__version__}", help="Show program's version number and exit")
     parser.add_argument("target", nargs="?", help="Target domain, public IPv4, or 'list-modules'")
-    parser.add_argument("-m", "--module", "--modules", dest="module", help=format_modules_help())
+    parser.add_argument("-m", "--modules", dest="module", help=format_modules_help())
     parser.add_argument("-o", "--output", help="Save scan results to a text file (.txt only)")
     parser.add_argument("-t", "--timeout", type=float, default=settings.MODULE_TIMEOUT, help=f"Timeout per module in seconds (default: {timeout_default}s)")
 

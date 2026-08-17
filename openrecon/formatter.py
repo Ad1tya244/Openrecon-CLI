@@ -18,7 +18,7 @@ BANNER_ART = """[0;38;2;140;255;255;49m [0;38;2;140;255;255;48;2;0;180;185m▓
 def print_startup_banner():
     print(BANNER_ART)
     console.print(f"[bold white]OpenRecon v{__version__}[/bold white]")
-    console.print("[dim]Local OSINT & Reconnaissance CLI[/dim]\n")
+    console.print("[dim]OSINT based Passive Reconnaissance[/dim]\n")
 
 def print_scan_header(target: str):
     console.print(f"\n[bold white]OpenRecon v{__version__}[/bold white] [dim]—[/dim] [bold cyan]{target}[/bold cyan]\n")

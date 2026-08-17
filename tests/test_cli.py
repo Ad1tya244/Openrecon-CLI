@@ -84,6 +84,11 @@ class TestCLIParser(unittest.TestCase):
         self.assertEqual(args.target, "example.com")
         self.assertEqual(args.module, "dns,ssl,tech")
 
+    def test_modules_long_flag_syntax(self):
+        args = self.parser.parse_args(["example.com", "--modules", "dns,ssl,tech"])
+        self.assertEqual(args.target, "example.com")
+        self.assertEqual(args.module, "dns,ssl,tech")
+
     def test_output_file_syntax(self):
         args = self.parser.parse_args(["example.com", "-o", "results.txt"])
         self.assertEqual(args.target, "example.com")
@@ -92,6 +97,15 @@ class TestCLIParser(unittest.TestCase):
     def test_list_modules_argument(self):
         args = self.parser.parse_args(["list-modules"])
         self.assertEqual(args.target, "list-modules")
+
+    def test_module_reference_section_in_help(self):
+        """Verify that Module Reference section is present in --help and contains list-modules."""
+        help_output = self.parser.format_help()
+        self.assertIn("Module Reference:", help_output)
+        self.assertIn("openrecon list-modules", help_output)
+        self.assertIn("List all available modules and descriptions", help_output)
+        examples_section = help_output.split("Examples:")[-1]
+        self.assertNotIn("list-modules", examples_section)
 
     def test_default_timeout_is_60_seconds(self):
         """Verify default module timeout is exactly 60.0s."""
