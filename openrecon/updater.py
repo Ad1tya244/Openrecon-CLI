@@ -343,9 +343,16 @@ def verify_installed_version(expected_version: str) -> bool:
     """Verifies that the expected version is installed after an update."""
     clean_expected = expected_version.lstrip("vV")
     try:
+        cmd = [sys.executable, "-c", "import openrecon; print(openrecon.__version__)"]
+        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=10)
+        if proc.returncode == 0:
+            ver = proc.stdout.strip().lstrip("vV")
+            if ver == clean_expected:
+                return True
+
         import importlib.metadata
         installed = importlib.metadata.version("openrecon")
-        return installed == clean_expected
+        return installed.lstrip("vV") == clean_expected
     except Exception:
         return True
 
