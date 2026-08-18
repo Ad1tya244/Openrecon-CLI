@@ -26,8 +26,8 @@ It performs high-precision, evidence-based reconnaissance against target domains
 
 ## 🚀 Key Features
 
+*   **🌐 Comprehensive DNS Intelligence**: Resolves 10 standard and extended DNS record types (`A`, `AAAA`, `CNAME`, `MX` with priority/null MX, `NS`, `SOA` with structured fields, complete un-truncated `TXT`, `CAA` with flags/tag/value, `SRV` for defined common services, and `PTR` reverse DNS for resolved IPs) with TTLs.
 *   **🛡️ Multi-Source Passive Subdomain Discovery**: Aggregates genuine subdomains across Certificate Transparency logs and passive intelligence feeds (`crt.sh`, `certspotter`, `urlscan`, `hackertarget`, `wayback`, `rapiddns`, `anubis`) with case-insensitive deduplication, apex exclusion, zero synthetic `www.` generation, and a 50-item hard cap.
-*   **🌐 Comprehensive DNS Intelligence**: Extracts `A`, `AAAA` (IPv6), `CNAME`, structured `MX` (hostname + priority), `NS`, structured `SOA` (primary nameserver, mailbox, serial, refresh, retry, expire, min TTL), record TTLs, and complete un-truncated `TXT` values.
 *   **✉️ Authoritative Email Security Posture**: Evaluates single-record `SPF` with strict qualifier semantics (`-all` → `STRICT`, `~all` → `SOFTFAIL`, `?all` → `NEUTRAL`, `+all` → `OVER-PERMISSIVE`, `redirect=` → `REDIRECT`) and RFC 7208 multiple-SPF invalidation; parses `DMARC` policies (`reject`, `quarantine`, `none`), subdomain policies, rua/ruf, and percentage; reports `DKIM` presence without brute-forcing.
 *   **🔒 SSL/TLS Certificate Analysis**: Inspects certificate validity, Certificate Version (e.g. `v3`), Key Type (RSA, EC, Ed25519), Key Size (bits), Certificate Chain Status (`VERIFIED`, `SELF-SIGNED`, `UNTRUSTED`), RFC 6125 SAN hostname validation, handshake cipher suites, and TLS protocol version.
 *   **🧱 Evidence-Based Technology Fingerprinting**: Multi-signal passive inspection across HTTP response headers, cookies, scripts, CSS assets, DOM markers, `<meta>` generator tags, inline JS properties, and robots.txt across 9 standardized categories (`Web Server`, `Backend`, `Frontend`, `CMS`, `Framework`, `Runtime`, `Analytics`, `JavaScript Libraries`, `CDN / Proxy`). Reports versions only when directly observed.
@@ -37,7 +37,7 @@ It performs high-precision, evidence-based reconnaissance against target domains
 *   **🔌 Port Reconnaissance**: Fast, concurrent TCP banner inspection of top common service ports (`21`, `22`, `25`, `53`, `80`, `443`, `3306`, `3389`, `8080`, `8443`) with banner version parsing for SSH, FTP, and SMTP without guessing.
 *   **🌍 Infrastructure & IP Intelligence**: Resolves Primary IPv4, IPv6, Additional IPs, Geolocation, ISP, Autonomous System Number (ASN), Provider, and Cloud/CDN Hosting categorization.
 *   **📋 Domain Registration Details**: Extracts Registrar, Registry Domain ID, Registrar IANA ID, Creation/Updated/Expiration dates, domain age, and EPP status codes while filtering privacy placeholders.
-*   **✨ Unified Aligned Key-Value CLI**: Clean terminal formatting with 4-space indentation, consistent key widths, and transparent background support.
+*   **✨ Unified Aligned Key-Value CLI**: Clean terminal formatting with TrueColor ANSI gradient banner, 4-space indentation, consistent key widths, and transparent background support.
 *   **💾 Formatted Text Report Export**: Direct export of structured scan results to `.txt` files (`-o / --output`).
 *   **🔄 Confirmed Opt-In GitHub Updater**: Check and install official GitHub releases or tags on demand (`openrecon --check-update`) with zero startup latency for normal scans.
 
@@ -98,7 +98,7 @@ openrecon --help
 
 | Module Identifier (`-m`) | Module Name | Primary Reconnaissance Signals |
 | :--- | :--- | :--- |
-| `dns` | DNS Recon | Standard records (`A`, `AAAA`, `CNAME`, `MX`, `NS`, `SOA`, `TXT`) with TTLs and structured fields |
+| `dns` | DNS Recon | Standard & extended records (`A`, `AAAA`, `CNAME`, `MX`, `NS`, `SOA`, `TXT`, `CAA`, `SRV`, `PTR`) with TTLs |
 | `whois` | Domain Registration | Registrar, Registry ID, Registrar ID, Creation/Updated/Expiration dates, Age, Status |
 | `ssl` | SSL / TLS Analysis | Certificate validity, Version, Key Type/Size, Chain Status, SANs, Cipher, TLS protocol |
 | `email` | Email Security | Authoritative SPF records, qualifiers, includes, DMARC policies, DKIM check |

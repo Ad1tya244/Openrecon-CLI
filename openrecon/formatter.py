@@ -84,6 +84,19 @@ def _print_kv(key: str, value: Any, indent: int = 4, key_width: int = 28, max_wi
         else:
             console.print(f"{sub_indent}{line}")
 
+ABSENT_DNS_MESSAGES = {
+    "A": "No A records",
+    "AAAA": "No AAAA records",
+    "CNAME": "No CNAME record",
+    "MX": "No MX records",
+    "NS": "No NS records",
+    "SOA": "No SOA records",
+    "TXT": "No TXT records",
+    "CAA": "No CAA records",
+    "SRV": "No SRV records",
+    "PTR": "No PTR records"
+}
+
 # 1. DNS
 def render_dns(data: Dict[str, Any]):
     if not data or "error" in data:
@@ -91,17 +104,15 @@ def render_dns(data: Dict[str, Any]):
         return
 
     console.print("[bold cyan][+][/bold cyan] [bold]DNS[/bold]")
-    has_records = False
-    for rtype in ["A", "AAAA", "CNAME", "MX", "NS", "SOA", "TXT"]:
+    for rtype in ["A", "AAAA", "CNAME", "MX", "NS", "SOA", "TXT", "CAA", "SRV", "PTR"]:
         records = data.get(rtype, [])
         if records:
-            has_records = True
             for i, r in enumerate(records):
                 k = rtype if i == 0 else ""
                 _print_kv(k, str(r), indent=4, key_width=16)
-
-    if not has_records:
-        console.print("    [dim]No DNS records resolved[/dim]")
+        else:
+            absent_msg = ABSENT_DNS_MESSAGES.get(rtype, f"No {rtype} records")
+            _print_kv(rtype, absent_msg, indent=4, key_width=16)
 
 # 2. WHOIS
 def render_whois(data: Dict[str, Any]):
