@@ -54,6 +54,6 @@ htmlcov/
 Thumbs.db
 .Trashes
 
-# Whitelist Package Data & Assets
+# Package Data & Assets Allowlist
 !openrecon/data/*.json
 !assets/*

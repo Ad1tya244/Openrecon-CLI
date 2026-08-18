@@ -13,7 +13,8 @@ BANNER_ART = """[0;38;2;140;255;255;49m [0;38;2;140;255;255;48;2;0;180;185m▓
 [0;38;2;140;255;255;48;2;0;180;185m▒░[0;38;2;75;75;75;49m█[0;38;2;140;255;255;49m   [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m░     [0;38;2;75;75;75;49m█▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m░    [0;38;2;75;75;75;49m▄[0;38;2;0;180;185;49m  [0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m░ [0;38;2;75;75;75;49m█[0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m▄[0;38;2;140;255;255;49m [0;38;2;140;255;255;48;2;0;180;185m░ [0;38;2;75;75;75;49m█[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m░     [0;38;2;75;75;75;49m█▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m░    [0;38;2;75;75;75;49m▄[0;38;2;0;180;185;49m  [0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m▒░[0;38;2;75;75;75;49m█[0;38;2;0;180;185;49m     [0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m▒░[0;38;2;75;75;75;49m█[0;38;2;140;255;255;49m   [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m░ [0;38;2;75;75;75;49m█[0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m▄[0;38;2;140;255;255;49m [0;38;2;140;255;255;48;2;0;180;185m░ [0;38;2;75;75;75;49m█[0m
 [0;38;2;140;255;255;48;2;0;180;185m░ [0;38;2;75;75;75;49m█[0;38;2;140;255;255;49m   [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█▀▀▀▀[0;38;2;0;180;185;49m [0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█▀▀▀[0;38;2;0;180;185;49m  [0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█ [0;38;2;0;180;185;49m██[0;38;2;75;75;75;49m▄[0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█▀▀[0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m▄[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█▀▀▀[0;38;2;0;180;185;49m  [0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m░ [0;38;2;75;75;75;49m█[0;38;2;0;180;185;49m     [0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m░ [0;38;2;75;75;75;49m█[0;38;2;140;255;255;49m   [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█ [0;38;2;0;180;185;49m██[0;38;2;75;75;75;49m▄[0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█[0m
 [0;38;2;140;255;255;49m [0;38;2;140;255;255;48;2;0;180;185m      [0;38;2;75;75;75;49m█▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█[0;38;2;0;180;185;49m     [0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m       [0;38;2;75;75;75;49m▄[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█[0;38;2;140;255;255;49m [0;38;2;75;75;75;49m [0;38;2;140;255;255;48;2;0;180;185m    [0;38;2;75;75;75;49m█[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█[0;38;2;140;255;255;49m  [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m       [0;38;2;75;75;75;49m▄[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;140;255;255;48;2;0;180;185m      [0;38;2;75;75;75;49m▄[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;140;255;255;48;2;0;180;185m      [0;38;2;75;75;75;49m█▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█[0;38;2;140;255;255;49m [0;38;2;75;75;75;49m [0;38;2;140;255;255;48;2;0;180;185m    [0;38;2;75;75;75;49m█[0m
-[0;38;2;140;255;255;49m  [0;38;2;75;75;75;49m▀▀▀▀▀▀[0;38;2;0;180;185;49m [0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀[0;38;2;0;180;185;49m     [0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀▀▀▀▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀[0;38;2;140;255;255;49m   [0;38;2;75;75;75;49m▀▀▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀[0;38;2;140;255;255;49m  [0;38;2;75;75;75;49m ▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀▀▀▀▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m  [0;38;2;75;75;75;49m▀▀▀▀▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m  [0;38;2;75;75;75;49m▀▀▀▀▀▀[0;38;2;0;180;185;49m [0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀[0;38;2;140;255;255;49m   [0;38;2;75;75;75;49m▀▀▀▀[0m"""
+[0;38;2;140;255;255;49m  [0;38;2;75;75;75;49m▀▀▀▀▀▀[0;38;2;0;180;185;49m [0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀[0;38;2;0;180;185;49m     [0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀▀▀▀▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀[0;38;2;140;255;255;49m   [0;38;2;75;75;75;49m▀▀▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀[0;38;2;140;255;255;49m  [0;38;2;75;75;75;49m ▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀▀▀▀▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m  [0;38;2;75;75;75;49m▀▀▀▀▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m  [0;38;2;75;75;75;49m▀▀▀▀▀▀[0;38;2;0;180;185;49m [0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀[0;38;2;140;255;255;49m   [0;38;2;75;75;75;49m▀▀▀▀[0m
+"""
 
 def print_startup_banner():
     print(BANNER_ART)
@@ -24,18 +25,20 @@ def print_scan_header(target: str):
     console.print(f"\n[bold white]OpenRecon v{__version__}[/bold white] [dim]—[/dim] [bold cyan]{target}[/bold cyan]\n")
 
 def _colorize_status(status_word: str) -> str:
-    w = status_word.upper()
-    if w in ("VALID", "PRESENT", "OPEN", "PROTECTED", "FOUND", "STRICT"):
+    if not status_word or not isinstance(status_word, str):
+        return str(status_word)
+    w = status_word.upper().strip()
+    if w in ("VALID", "PRESENT", "OPEN", "PROTECTED", "VERIFIED", "STRICT"):
         return f"[green]{status_word}[/green]"
-    elif w in ("INVALID", "MISSING", "CLOSED", "EXPOSED", "EXPIRED"):
+    elif "INVALID" in w or w in ("MISSING", "CLOSED", "EXPOSED", "EXPIRED", "UNTRUSTED", "HOSTNAME_MISMATCH"):
         return f"[red]{status_word}[/red]"
-    elif w in ("WARNING", "SOFTFAIL", "OVER-PERMISSIVE"):
+    elif w in ("WARNING", "SOFTFAIL", "OVER-PERMISSIVE", "SELF-SIGNED", "INCOMPLETE", "REDIRECT"):
         return f"[yellow]{status_word}[/yellow]"
     elif w in ("NOT DETECTED", "NOT ENUMERATED", "UNKNOWN", "NONE", "N/A"):
         return f"[dim]{status_word}[/dim]"
     return status_word
 
-def _print_kv(key: str, value: str, indent: int = 4, key_width: int = 16, max_width: int = 84):
+def _print_kv(key: str, value: Any, indent: int = 4, key_width: int = 28, max_width: int = 90):
     if value is None or value == "":
         return
     value_str = str(value)
@@ -43,12 +46,10 @@ def _print_kv(key: str, value: str, indent: int = 4, key_width: int = 16, max_wi
     sub_indent = " " * (indent + key_width + 1)
     avail_width = max(35, max_width - len(sub_indent))
 
-    # Single line optimization
     if len(prefix) + len(value_str) <= max_width and "\n" not in value_str:
         console.print(f"{prefix}{value_str}")
         return
 
-    # List wrapping by comma (e.g. MX, NS, Locations, Providers)
     if ", " in value_str and "\n" not in value_str:
         parts = [p.strip() for p in value_str.split(", ") if p.strip()]
         lines = []
@@ -73,7 +74,6 @@ def _print_kv(key: str, value: str, indent: int = 4, key_width: int = 16, max_wi
                 console.print(f"{sub_indent}{line}")
         return
 
-    # Text wrapping for general text
     wrapped = textwrap.wrap(value_str, width=avail_width)
     if not wrapped:
         console.print(f"{prefix}{value_str}")
@@ -84,57 +84,26 @@ def _print_kv(key: str, value: str, indent: int = 4, key_width: int = 16, max_wi
         else:
             console.print(f"{sub_indent}{line}")
 
+# 1. DNS
 def render_dns(data: Dict[str, Any]):
     if not data or "error" in data:
-        console.print(f"[bold cyan][+][/bold cyan] [bold]DNS[/bold]\\n    [red]Error: {data.get('error', 'No data')}[/red]\\n")
+        console.print(f"[bold cyan][+][/bold cyan] [bold]DNS[/bold]\n    [red]Error: {data.get('error', 'No data')}[/red]")
         return
 
     console.print("[bold cyan][+][/bold cyan] [bold]DNS[/bold]")
+    has_records = False
     for rtype in ["A", "AAAA", "CNAME", "MX", "NS", "SOA", "TXT"]:
         records = data.get(rtype, [])
         if records:
-            _print_kv(rtype, ", ".join(records))
+            has_records = True
+            for i, r in enumerate(records):
+                k = rtype if i == 0 else ""
+                _print_kv(k, str(r), indent=4, key_width=16)
 
-    for rtype, records in data.items():
-        if rtype not in ("A", "AAAA", "CNAME", "MX", "NS", "SOA", "TXT", "email_security", "flags", "domain", "module_key", "name") and isinstance(records, list) and records:
-            _print_kv(rtype, ", ".join(str(r) for r in records))
+    if not has_records:
+        console.print("    [dim]No DNS records resolved[/dim]")
 
-def render_email(data: Dict[str, Any]):
-    if not data or "error" in data:
-        console.print(f"[bold cyan][+][/bold cyan] [bold]Email Security[/bold]\\n    [red]Error: {data.get('error', 'No data')}[/red]\\n")
-        return
-
-    console.print("[bold cyan][+][/bold cyan] [bold]Email Security[/bold]")
-    spf = data.get("spf", {})
-    spf_present = spf.get("present", False)
-    _print_kv("SPF Record", _colorize_status("PRESENT" if spf_present else "MISSING"))
-    
-    spf_status = str(spf.get("status", "N/A")).upper()
-    if "STRICT" in spf_status:
-        _print_kv("SPF Status", _colorize_status("STRICT"))
-    elif "SOFT" in spf_status:
-        _print_kv("SPF Status", _colorize_status("SOFTFAIL"))
-    elif "OVER-PERMISSIVE" in spf_status:
-        _print_kv("SPF Status", _colorize_status("OVER-PERMISSIVE"))
-    elif spf_present:
-        _print_kv("SPF Status", _colorize_status(spf_status))
-    else:
-        _print_kv("SPF Status", _colorize_status("NONE"))
-        
-    if spf.get("record"):
-        _print_kv("SPF Value", spf["record"])
-
-    dmarc = data.get("dmarc", {})
-    dmarc_present = dmarc.get("present", False)
-    _print_kv("DMARC Record", _colorize_status("PRESENT" if dmarc_present else "MISSING"))
-    
-    dmarc_policy = (dmarc.get("policy") or "NONE").upper()
-    _print_kv("DMARC Policy", _colorize_status(dmarc_policy) if dmarc_present else _colorize_status("NONE"))
-
-    dkim = data.get("dkim_dns_check", {})
-    dkim_found = dkim.get("_domainkey_exists", False)
-    _print_kv("DKIM", _colorize_status("PRESENT" if dkim_found else "NOT ENUMERATED"))
-
+# 2. WHOIS
 def render_whois(data: Dict[str, Any]):
     if not data or "error" in data:
         console.print(f"[bold cyan][+][/bold cyan] [bold]Domain Registration[/bold]\n    [red]Error: {data.get('error', 'Lookup failed')}[/red]")
@@ -142,41 +111,47 @@ def render_whois(data: Dict[str, Any]):
 
     console.print("[bold cyan][+][/bold cyan] [bold]Domain Registration[/bold]")
     if data.get("registrar"):
-        _print_kv("Registrar", str(data["registrar"]))
-
-    created = data.get("creation_date", "")
-    age = data.get("age_days")
-    if created:
-        date_clean = str(created)[:10]
-        _print_kv("Created", date_clean)
-        if age is not None:
-            years = round(age / 365.25, 1)
-            _print_kv("Age", f"{years} years")
-
-    expires = data.get("expiration_date", "")
-    if expires:
-        date_clean = str(expires)[:10]
-        _print_kv("Expires", date_clean)
+        _print_kv("Registrar", str(data["registrar"]), indent=4, key_width=16)
+    if data.get("registry_domain_id"):
+        _print_kv("Registry ID", str(data["registry_domain_id"]), indent=4, key_width=16)
+    if data.get("registrar_iana_id"):
+        _print_kv("Registrar ID", str(data["registrar_iana_id"]), indent=4, key_width=16)
+    if data.get("creation_date"):
+        _print_kv("Created", str(data["creation_date"])[:10], indent=4, key_width=16)
+    if data.get("updated_date"):
+        _print_kv("Updated", str(data["updated_date"])[:10], indent=4, key_width=16)
+    if data.get("expiration_date"):
+        _print_kv("Expires", str(data["expiration_date"])[:10], indent=4, key_width=16)
+    if data.get("age_years") is not None:
+        _print_kv("Age", f"{data['age_years']} years", indent=4, key_width=16)
 
     status = data.get("status")
-    if status and status != "Unknown":
-        if isinstance(status, list):
-            _print_kv("Status", ", ".join(status[:2]))
-        else:
-            _print_kv("Status", str(status))
+    if status:
+        status_str = ", ".join(status) if isinstance(status, list) else str(status)
+        _print_kv("Status", status_str, indent=4, key_width=16)
 
-    flags = data.get("flags", [])
-    for f in flags:
-        _print_kv("Warning", _colorize_status("WARNING") + f" {f}")
+    if data.get("registrant"):
+        _print_kv("Registrant", str(data["registrant"]), indent=4, key_width=16)
 
+# 3. SSL / TLS
 def render_ssl(data: Dict[str, Any]):
     if not data or "error" in data:
         console.print(f"[bold cyan][+][/bold cyan] [bold]SSL / TLS[/bold]\n    [red]Error: {data.get('error', 'Handshake failed')}[/red]")
         return
 
     console.print("[bold cyan][+][/bold cyan] [bold]SSL / TLS[/bold]")
-    valid = data.get("valid", False)
-    _print_kv("Status", _colorize_status("VALID" if valid else "INVALID"))
+    status_label = data.get("status_label") or ("VALID" if data.get("valid", False) else "INVALID")
+    _print_kv("Status", _colorize_status(status_label), indent=4, key_width=16)
+
+    if data.get("chain_status"):
+        _print_kv("Chain Status", _colorize_status(data["chain_status"]), indent=4, key_width=16)
+
+    if data.get("version"):
+        _print_kv("Version", str(data["version"]), indent=4, key_width=16)
+    if data.get("key_type"):
+        _print_kv("Key Type", str(data["key_type"]), indent=4, key_width=16)
+    if data.get("key_size"):
+        _print_kv("Key Size", str(data["key_size"]), indent=4, key_width=16)
 
     issuer = data.get("issuer", {})
     if isinstance(issuer, dict):
@@ -184,144 +159,157 @@ def render_ssl(data: Dict[str, Any]):
         org = issuer.get("organizationName")
         issuer_str = f"{cn} ({org})" if cn and org else (cn or org or str(issuer))
     else:
-        issuer_str = str(issuer)
+        issuer_str = str(issuer) if issuer else None
     if issuer_str:
-        _print_kv("Issuer", issuer_str)
+        _print_kv("Issuer", issuer_str, indent=4, key_width=16)
 
     subject = data.get("subject", {})
     if isinstance(subject, dict):
         subj_str = subject.get("commonName") or str(subject)
     else:
-        subj_str = str(subject)
+        subj_str = str(subject) if subject else None
     if subj_str:
-        _print_kv("Subject", subj_str)
+        _print_kv("Subject", subj_str, indent=4, key_width=16)
 
     if data.get("valid_from"):
-        _print_kv("Valid From", str(data["valid_from"])[:10])
+        _print_kv("Valid From", str(data["valid_from"])[:10], indent=4, key_width=16)
     if data.get("valid_until"):
-        _print_kv("Valid Until", str(data["valid_until"])[:10])
+        _print_kv("Valid Until", str(data["valid_until"])[:10], indent=4, key_width=16)
 
     days = data.get("days_remaining")
     if days is not None:
-        _print_kv("Days Remaining", str(days))
+        _print_kv("Days Remaining", str(days), indent=4, key_width=16)
 
     if data.get("serial_number"):
-        _print_kv("Serial Number", str(data["serial_number"]))
+        _print_kv("Serial Number", str(data["serial_number"]), indent=4, key_width=16)
 
     if data.get("signature_algorithm"):
-        _print_kv("Signature", str(data["signature_algorithm"]))
+        _print_kv("Signature", str(data["signature_algorithm"]), indent=4, key_width=16)
 
     sans = data.get("subject_alt_names", [])
     if sans:
-        _print_kv("SANs", ", ".join(sans))
+        _print_kv("SANs", ", ".join(sans), indent=4, key_width=16)
 
-    cipher = data.get("cipher_suite")
-    if cipher:
-        c_name = cipher[0] if isinstance(cipher, (list, tuple)) and len(cipher) > 0 else str(cipher)
-        c_proto = cipher[1] if isinstance(cipher, (list, tuple)) and len(cipher) > 1 else ""
-        _print_kv("Cipher", str(c_name))
-        if c_proto:
-            _print_kv("Protocol", str(c_proto))
+    if data.get("cipher"):
+        _print_kv("Cipher", str(data["cipher"]), indent=4, key_width=16)
+    if data.get("protocol"):
+        _print_kv("Protocol", str(data["protocol"]), indent=4, key_width=16)
 
+# 4. Email Security
+def render_email(data: Dict[str, Any]):
+    if not data or "error" in data:
+        console.print(f"[bold cyan][+][/bold cyan] [bold]Email Security[/bold]\n    [red]Error: {data.get('error', 'No data')}[/red]")
+        return
+
+    console.print("[bold cyan][+][/bold cyan] [bold]Email Security[/bold]")
+    spf = data.get("spf", {})
+    _print_kv("SPF Record", _colorize_status(spf.get("record", "MISSING")), indent=4, key_width=16)
+    if spf.get("record") in ("PRESENT", "INVALID"):
+        _print_kv("SPF Status", _colorize_status(spf.get("status", "UNKNOWN")), indent=4, key_width=16)
+        if spf.get("value"):
+            _print_kv("SPF Value", str(spf["value"]), indent=4, key_width=16)
+        if spf.get("final_qualifier"):
+            _print_kv("Final Qualifier", str(spf["final_qualifier"]), indent=4, key_width=16)
+        if spf.get("includes"):
+            _print_kv("Includes", ", ".join(spf["includes"]), indent=4, key_width=16)
+
+    dmarc = data.get("dmarc", {})
+    _print_kv("DMARC Record", _colorize_status(dmarc.get("record", "MISSING")), indent=4, key_width=16)
+    if dmarc.get("record") == "PRESENT":
+        if dmarc.get("policy"):
+            _print_kv("DMARC Policy", str(dmarc["policy"]), indent=4, key_width=16)
+        if dmarc.get("subdomain_policy"):
+            _print_kv("Subdomain Policy", str(dmarc["subdomain_policy"]), indent=4, key_width=16)
+        if dmarc.get("rua"):
+            _print_kv("Rua", str(dmarc["rua"]), indent=4, key_width=16)
+        if dmarc.get("ruf"):
+            _print_kv("Ruf", str(dmarc["ruf"]), indent=4, key_width=16)
+        if dmarc.get("percentage"):
+            _print_kv("Percentage", str(dmarc["percentage"]), indent=4, key_width=16)
+
+    dkim = data.get("dkim", {})
+    _print_kv("DKIM", _colorize_status(dkim.get("status", "NOT ENUMERATED")), indent=4, key_width=16)
+
+# 5. HTTP
 def render_headers(data: Dict[str, Any]):
     if not data or "error" in data:
         console.print(f"[bold cyan][+][/bold cyan] [bold]HTTP[/bold]\n    [red]Error: {data.get('error', 'Unreachable')}[/red]")
         return
 
     console.print("[bold cyan][+][/bold cyan] [bold]HTTP[/bold]")
+    if data.get("url"):
+        _print_kv("URL", str(data["url"]), indent=4, key_width=16)
     if data.get("status_code"):
-        _print_kv("Status Code", str(data["status_code"]))
-    if data.get("server") and data["server"] != "Unknown":
-        _print_kv("Server", str(data["server"]))
+        _print_kv("Status Code", str(data["status_code"]), indent=4, key_width=16)
+    if data.get("server"):
+        _print_kv("Server", str(data["server"]), indent=4, key_width=16)
     if data.get("content_type"):
-        _print_kv("Content-Type", str(data["content_type"]))
-    if data.get("content_length") is not None:
-        _print_kv("Content-Length", str(data["content_length"]))
-    if "redirects" in data and data["redirects"] is not None:
-        _print_kv("Redirects", str(data["redirects"]))
+        _print_kv("Content-Type", str(data["content_type"]), indent=4, key_width=16)
+    if data.get("content_length"):
+        _print_kv("Content-Length", str(data["content_length"]), indent=4, key_width=16)
+    if data.get("http_version"):
+        _print_kv("HTTP Version", str(data["http_version"]), indent=4, key_width=16)
+    if data.get("redirects") is not None:
+        _print_kv("Redirects", str(data["redirects"]), indent=4, key_width=16)
+    if data.get("location"):
+        _print_kv("Location", str(data["location"]), indent=4, key_width=16)
     if data.get("final_url"):
-        _print_kv("Final URL", str(data["final_url"]))
+        _print_kv("Final URL", str(data["final_url"]), indent=4, key_width=16)
+    if data.get("cookies"):
+        _print_kv("Set-Cookie", str(data["cookies"]), indent=4, key_width=16)
+    if data.get("date"):
+        _print_kv("Date", str(data["date"]), indent=4, key_width=16)
+    if data.get("last_modified"):
+        _print_kv("Last-Modified", str(data["last_modified"]), indent=4, key_width=16)
+    if data.get("etag"):
+        _print_kv("ETag", str(data["etag"]), indent=4, key_width=16)
 
+# 6. Security Headers
 def render_security_headers(data: Dict[str, Any]):
     if not data or "error" in data:
         console.print(f"[bold cyan][+][/bold cyan] [bold]Security Headers[/bold]\n    [red]Error: {data.get('error', 'Unreachable')}[/red]")
         return
 
     console.print("[bold cyan][+][/bold cyan] [bold]Security Headers[/bold]")
-
-    standard_headers = [
-        "Strict-Transport-Security",
-        "Content-Security-Policy",
-        "X-Frame-Options",
-        "X-Content-Type-Options",
-        "Referrer-Policy",
-        "Permissions-Policy"
-    ]
-    present = data.get("present_headers", {})
+    headers_dict = data.get("headers", {})
     
-    for h_name in standard_headers:
-        if h_name in present:
-            _print_kv(h_name, _colorize_status("PRESENT"), key_width=28)
-        else:
-            _print_kv(h_name, _colorize_status("MISSING"), key_width=28)
+    for h_name, h_info in headers_dict.items():
+        val = h_info.get("value", "MISSING")
+        colorized_val = _colorize_status(val) if val == "MISSING" else val
+        _print_kv(h_name, colorized_val, indent=4, key_width=28)
 
+# 7. Subdomains
 def render_subdomains(data: Dict[str, Any]):
     if not data or "error" in data:
-        console.print(f"[bold cyan][+][/bold cyan] [bold]Subdomains[/bold]\n    [red]Error: {data.get('error', 'Enumeration failed')}[/red]")
+        console.print(f"[bold cyan][+][/bold cyan] [bold]Subdomains[/bold]\n    [red]Error: {data.get('error', 'Lookup failed')}[/red]")
         return
 
-    subs = data.get("subdomains", [])
-    limit_reached = data.get("limit_reached", False)
-    
+    subdomains = data.get("subdomains", [])
+    total = len(subdomains)
     console.print("[bold cyan][+][/bold cyan] [bold]Subdomains[/bold]")
-    if limit_reached:
-        _print_kv("Total", f"{len(subs)}+ (limit reached)")
-    else:
-        _print_kv("Total", str(len(subs)))
+    _print_kv("Total", str(total), indent=4, key_width=16)
 
-    if not subs:
-        console.print("    [dim]No subdomains discovered[/dim]")
-        return
-
-    # Sort subdomains alphabetically and display all entries
-    sorted_subs = sorted(subs, key=lambda s: s.get("hostname", ""))
-    for s in sorted_subs:
-        host = s.get("hostname", "")
+    for s in subdomains:
+        host = s.get("hostname", "") if isinstance(s, dict) else str(s)
         if host:
             console.print(f"    {host}")
 
+# 8. Technology Stack
 def render_tech(data: Dict[str, Any]):
-    if not data:
-        console.print("[bold cyan][+][/bold cyan] [bold]Technology Stack[/bold]\n    No technologies identified.")
-        return
-    if "error" in data:
+    if not data or "error" in data:
         console.print(f"[bold cyan][+][/bold cyan] [bold]Technology Stack[/bold]\n    [red]Error: {data.get('error', 'Unreachable')}[/red]")
         return
 
     console.print("[bold cyan][+][/bold cyan] [bold]Technology Stack[/bold]")
     categories = data.get("categories", {})
-    technologies = data.get("technologies", [])
     
-    if not categories and technologies:
-        categories = {}
-        for t in technologies:
-            cat = t.get("category", "Other")
-            if cat not in categories:
-                categories[cat] = []
-            categories[cat].append(t)
-            
-    if not categories or not any(categories.values()):
-        console.print("    No technologies identified.")
-        return
-
-    preferred_order = ["Web Server", "Frontend", "Backend", "CMS", "CDN"]
-    sorted_cat_keys = sorted(
-        categories.keys(),
-        key=lambda c: (preferred_order.index(c) if c in preferred_order else 999, c)
-    )
-
+    preferred_order = [
+        "Web Server", "Backend", "Frontend", "CMS", "Framework",
+        "Runtime", "Analytics", "JavaScript Libraries", "CDN / Proxy"
+    ]
+    
     has_output = False
-    for cat in sorted_cat_keys:
+    for cat in preferred_order:
         items = categories.get(cat, [])
         if not items:
             continue
@@ -334,69 +322,64 @@ def render_tech(data: Dict[str, Any]):
                 formatted_items.append(display_name)
         if formatted_items:
             combined_val = ", ".join(formatted_items)
-            _print_kv(cat, combined_val, indent=4, key_width=16)
+            _print_kv(cat, combined_val, indent=4, key_width=20)
             has_output = True
+
+    for cat, items in categories.items():
+        if cat not in preferred_order and items:
+            formatted_items = [f"{i.get('name')} {i.get('version')}".strip() for i in items if i.get("name")]
+            if formatted_items:
+                _print_kv(cat, ", ".join(formatted_items), indent=4, key_width=20)
+                has_output = True
 
     if not has_output:
         console.print("    No technologies identified.")
 
+# 9. Open Ports
 def render_ports(data: Dict[str, Any]):
     if not data or "error" in data:
         console.print(f"[bold cyan][+][/bold cyan] [bold]Open Ports[/bold]\n    [red]Error: {data.get('error', 'Scan failed')}[/red]")
         return
 
-    open_ports = data.get("open_ports", [])
     console.print("[bold cyan][+][/bold cyan] [bold]Open Ports[/bold]")
+    open_ports = data.get("open_ports", [])
 
     if not open_ports:
         console.print("    [dim]No open ports detected[/dim]")
         return
 
-    sorted_ports = sorted(open_ports, key=lambda x: x.get("port", 0))
-    for p in sorted_ports:
-        port_str = f"{p.get('port')}/tcp"
+    for p in open_ports:
+        port_num = p.get("port")
         service = p.get("service", "Unknown")
-        _print_kv(port_str, service, indent=4, key_width=16)
+        version = p.get("version")
+        val_str = f"{service} {version}".strip() if version else service
+        _print_kv(f"{port_num}/tcp", val_str, indent=4, key_width=16)
 
+# 10. Infrastructure
 def render_ip_asn(data: Dict[str, Any]):
     if not data or "error" in data:
         console.print(f"[bold cyan][+][/bold cyan] [bold]Infrastructure[/bold]\n    [red]Error: {data.get('error', 'Lookup failed')}[/red]")
         return
 
-    ips = data.get("ips", [])
     console.print("[bold cyan][+][/bold cyan] [bold]Infrastructure[/bold]")
+    if data.get("primary_ip"):
+        _print_kv("Primary IP", str(data["primary_ip"]), indent=4, key_width=16)
+    if data.get("ipv6"):
+        _print_kv("IPv6", str(data["ipv6"]), indent=4, key_width=16)
+    if data.get("additional_ips"):
+        _print_kv("Additional IPs", ", ".join(data["additional_ips"]), indent=4, key_width=16)
+    if data.get("location"):
+        _print_kv("Location", str(data["location"]), indent=4, key_width=16)
+    if data.get("isp"):
+        _print_kv("ISP", str(data["isp"]), indent=4, key_width=16)
+    if data.get("asn"):
+        _print_kv("ASN", str(data["asn"]), indent=4, key_width=16)
+    if data.get("provider"):
+        _print_kv("Provider", str(data["provider"]), indent=4, key_width=16)
+    if data.get("hosting_type"):
+        _print_kv("Hosting Type", str(data["hosting_type"]), indent=4, key_width=16)
 
-    if not ips:
-        console.print("    [dim]No infrastructure data available[/dim]")
-        return
-
-    primary = ips[0]
-    if "error" in primary:
-        _print_kv("Primary IP", f"{primary.get('ip', '')} (Lookup failed)")
-    else:
-        _print_kv("Primary IP", str(primary.get("ip", "Unknown")))
-        if primary.get("location"):
-            _print_kv("Location", str(primary["location"]))
-        if primary.get("isp"):
-            _print_kv("ISP", str(primary["isp"]))
-        if primary.get("asn"):
-            _print_kv("ASN", str(primary["asn"]))
-        if primary.get("provider"):
-            _print_kv("Provider", str(primary["provider"]))
-        if primary.get("hosting_type"):
-            _print_kv("Hosting Type", str(primary["hosting_type"]))
-
-    # Additional target IPs if DNS returns multiple
-    if len(ips) > 1:
-        console.print("    Additional IPs")
-        for item in ips[1:]:
-            if "error" not in item:
-                ip_val = item.get("ip", "")
-                asn_val = item.get("asn", "")
-                prov_val = item.get("provider", item.get("isp", ""))
-                meta = f"{asn_val} | {prov_val}".strip(" |")
-                _print_kv(ip_val, meta, indent=8, key_width=16)
-
+# 11. Public Files
 def render_public_files(data: Dict[str, Any]):
     if not data or "error" in data:
         console.print(f"[bold cyan][+][/bold cyan] [bold]Public Files[/bold]\n    [red]Error: {data.get('error', 'Check failed')}[/red]")
@@ -410,43 +393,29 @@ def render_public_files(data: Dict[str, Any]):
     else:
         console.print("    None detected")
 
-HTTP_STATUS_REASONS = {
-    200: "200 OK",
-    301: "301 Moved Permanently",
-    302: "302 Found",
-    400: "400 Bad Request",
-    401: "401 Unauthorized",
-    403: "403 Forbidden",
-    404: "404 Not Found",
-    500: "500 Internal Server Error",
-    502: "502 Bad Gateway",
-    503: "503 Service Unavailable"
-}
-
+# 12. Directory Exposure
 def render_directories(data: Dict[str, Any]):
     if not data or "error" in data:
         console.print(f"[bold cyan][+][/bold cyan] [bold]Directory Exposure[/bold]\n    [red]Error: {data.get('error', 'Check failed')}[/red]")
         return
 
     console.print("[bold cyan][+][/bold cyan] [bold]Directory Exposure[/bold]")
-    exposed_dirs = data.get("exposed_directories", [])
     findings = data.get("findings", [])
-    
-    paths = []
-    if exposed_dirs:
-        paths = exposed_dirs
-    elif findings:
-        paths = [f.get("path") if isinstance(f, dict) else str(f) for f in findings]
 
-    if paths:
-        max_path_len = max(len(p) for p in paths)
-        col_width = max(24, max_path_len + 4)
-        for p in paths:
-            console.print(f"    {p:<{col_width}}" + _colorize_status("Exposed"))
-        console.print(f"    Total: {len(paths)}")
+    exposed_items = []
+    for f in findings:
+        if isinstance(f, dict):
+            if f.get("is_exposed") or "EXPOSED" in f.get("status", ""):
+                exposed_items.append((f.get("path", ""), f.get("status", "200 EXPOSED")))
+        elif isinstance(f, str):
+            exposed_items.append((f, "200 EXPOSED"))
+
+    if exposed_items:
+        for path, status in exposed_items:
+            colorized = f"200 {_colorize_status('EXPOSED')}" if "EXPOSED" in status else _colorize_status(status)
+            _print_kv(path, colorized, indent=4, key_width=16)
     else:
         console.print("    No exposed directories found.")
-        console.print("    Total: 0")
 
 RENDER_MAP = {
     "dns": render_dns,

@@ -11,10 +11,40 @@ DEFAULT_FINGERPRINTS_PATH = os.path.abspath(
 
 _DEFAULT_FINGERPRINTS_CACHE: Optional[Dict[str, Any]] = None
 
+CATEGORY_STANDARD_MAP = {
+    "web servers": "Web Server",
+    "web server": "Web Server",
+    "programming languages": "Backend",
+    "backend": "Backend",
+    "databases": "Backend",
+    "ui frameworks": "Frontend",
+    "frontend": "Frontend",
+    "font scripts": "Frontend",
+    "cms": "CMS",
+    "web frameworks": "Framework",
+    "frameworks": "Framework",
+    "framework": "Framework",
+    "paas": "Runtime",
+    "runtimes": "Runtime",
+    "runtime": "Runtime",
+    "analytics": "Analytics",
+    "javascript libraries": "JavaScript Libraries",
+    "javascript graphics": "JavaScript Libraries",
+    "cdn": "CDN / Proxy",
+    "reverse proxies": "CDN / Proxy",
+    "cdn / proxy": "CDN / Proxy",
+    "security": "CDN / Proxy",
+}
+
+def standardize_category(raw_cat: str) -> str:
+    if not raw_cat:
+        return "Frontend"
+    c_lower = raw_cat.strip().lower()
+    return CATEGORY_STANDARD_MAP.get(c_lower, "Frontend")
+
 def load_fingerprints(custom_path: Optional[str] = None) -> Dict[str, Any]:
     """
     Loads technology fingerprints from the authoritative JSON database.
-    Supports loading from an explicit custom path if provided.
     """
     global _DEFAULT_FINGERPRINTS_CACHE
 
@@ -37,9 +67,7 @@ def load_fingerprints(custom_path: Optional[str] = None) -> Dict[str, Any]:
     return {}
 
 def extract_meta_tags(html: str) -> Dict[str, List[str]]:
-    """
-    Extracts name/property to content mappings from HTML meta tags.
-    """
+    """Extracts name/property to content mappings from HTML meta tags."""
     if not html or not isinstance(html, str):
         return {}
     meta_dict: Dict[str, List[str]] = {}
@@ -63,9 +91,7 @@ def extract_meta_tags(html: str) -> Dict[str, List[str]]:
     return meta_dict
 
 def extract_asset_urls(html: str) -> Dict[str, List[str]]:
-    """
-    Extracts script, css, image, and link URLs as well as inline JS blocks from HTML body.
-    """
+    """Extracts script and stylesheet URLs from HTML body."""
     if not html or not isinstance(html, str):
         return {"scripts": [], "css": [], "all_assets": [], "inline_js": []}
         
@@ -86,64 +112,6 @@ def extract_asset_urls(html: str) -> Dict[str, List[str]]:
         "inline_js": inline_js
     }
 
-def _resolve_relationships(
-    detected: Dict[str, Dict[str, Any]],
-    fingerprints: Dict[str, Any]
-) -> Dict[str, Dict[str, Any]]:
-    """
-    Resolves 'implies', 'requires', and 'excludes' relationships in a cycle-safe manner.
-    """
-    # 1. Resolve 'implies' recursively with cycle safety
-    visited_implies: Set[str] = set()
-    queue = list(detected.keys())
-
-    while queue:
-        tech = queue.pop(0)
-        if tech in visited_implies:
-            continue
-        visited_implies.add(tech)
-
-        rule = fingerprints.get(tech, {})
-        implies = rule.get("implies", [])
-        if isinstance(implies, str):
-            implies = [implies]
-
-        for imp in implies:
-            if imp in fingerprints:
-                if imp not in detected:
-                    detected[imp] = {
-                        "name": imp,
-                        "version": None,
-                        "category": fingerprints[imp].get("category", "Other")
-                    }
-                if imp not in visited_implies:
-                    queue.append(imp)
-
-    # 2. Resolve 'requires' (if any required technology is absent, drop candidate)
-    for tech in list(detected.keys()):
-        rule = fingerprints.get(tech, {})
-        requires = rule.get("requires", [])
-        if isinstance(requires, str):
-            requires = [requires]
-        for req in requires:
-            if req not in detected:
-                del detected[tech]
-                break
-
-    # 3. Resolve 'excludes' (if candidate excludes another detected tech, remove excluded)
-    for tech in list(detected.keys()):
-        if tech not in detected:
-            continue
-        rule = fingerprints.get(tech, {})
-        excludes = rule.get("excludes", [])
-        if isinstance(excludes, str):
-            excludes = [excludes]
-        for exc in excludes:
-            if exc in detected:
-                del detected[exc]
-
-    return detected
-
 def identify_technologies(
     headers: Dict[str, Any],
     html: str,
@@ -152,8 +120,9 @@ def identify_technologies(
     robots_txt: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Passively fingerprints technologies across HTTP headers, cookies, HTML patterns,
-    DOM markers, meta tags, script URLs, CSS assets, inline JS, robots.txt, and URL patterns.
+    Strictly evidence-based technology identification across:
+    HTTP headers, cookies, HTML patterns, meta tags, script references, CSS asset names.
+    Does not infer technologies without direct observed evidence.
     """
     if fingerprints is None:
         fingerprints = load_fingerprints()
@@ -176,11 +145,12 @@ def identify_technologies(
     detected_techs: Dict[str, Dict[str, Any]] = {}
 
     for tech_name, rule in fingerprints.items():
-        category = rule.get("category", "Other")
+        raw_category = rule.get("category", "Frontend")
+        category = standardize_category(raw_category)
         matched = False
         version: Optional[str] = None
 
-        # 1. Header Match
+        # 1. Header Match (Evidence)
         if "headers" in rule and isinstance(rule["headers"], dict):
             for h_name, pat in rule["headers"].items():
                 h_name_lower = h_name.lower()
@@ -192,7 +162,7 @@ def identify_technologies(
                         if m.groups() and m.group(1):
                             version = version or m.group(1).strip()
 
-        # 2. Cookie Match
+        # 2. Cookie Match (Evidence)
         if "cookies" in rule:
             cookie_pats = rule["cookies"]
             if isinstance(cookie_pats, list):
@@ -211,7 +181,7 @@ def identify_technologies(
                         else:
                             matched = True
 
-        # 3. Meta Tags Match
+        # 3. Meta Tags Match (Evidence)
         if "meta" in rule and isinstance(rule["meta"], dict):
             for m_name, pat in rule["meta"].items():
                 m_name_lower = m_name.lower()
@@ -223,7 +193,7 @@ def identify_technologies(
                             if m.groups() and m.group(1):
                                 version = version or m.group(1).strip()
 
-        # 4. Scripts / ScriptSrc Match
+        # 4. Scripts / ScriptSrc Match (Evidence)
         script_patterns = rule.get("scripts") or rule.get("scriptSrc")
         if script_patterns and isinstance(script_patterns, list):
             for pat in script_patterns:
@@ -234,7 +204,7 @@ def identify_technologies(
                         if m.groups() and m.group(1):
                             version = version or m.group(1).strip()
 
-        # 5. CSS Assets Match
+        # 5. CSS Assets Match (Evidence)
         if "css" in rule and isinstance(rule["css"], list):
             for pat in rule["css"]:
                 for c_url in css_urls:
@@ -244,42 +214,33 @@ def identify_technologies(
                         if m.groups() and m.group(1):
                             version = version or m.group(1).strip()
 
-        # 6. HTML / DOM Match
-        html_patterns = rule.get("html") or rule.get("dom")
-        if html_patterns and isinstance(html_patterns, list):
-            for pat in html_patterns:
-                m = re.search(pat, html_str, re.IGNORECASE)
+        # 6. HTML Match (Evidence)
+        if "html" in rule and html_str:
+            html_pats = rule["html"]
+            if isinstance(html_pats, list):
+                for h_pat in html_pats:
+                    m = re.search(h_pat, html_str, re.IGNORECASE)
+                    if m:
+                        matched = True
+                        if m.groups() and m.group(1):
+                            version = version or m.group(1).strip()
+            elif isinstance(html_pats, str):
+                m = re.search(html_pats, html_str, re.IGNORECASE)
                 if m:
                     matched = True
                     if m.groups() and m.group(1):
                         version = version or m.group(1).strip()
 
-        # 7. JavaScript Property / Inline Match
-        if "js" in rule and isinstance(rule["js"], list):
-            for pat in rule["js"]:
-                m = re.search(pat, inline_js_text, re.IGNORECASE)
-                if m:
-                    matched = True
-                    if m.groups() and m.group(1):
-                        version = version or m.group(1).strip()
-
-        # 8. Robots.txt Match
-        if "robots" in rule and isinstance(rule["robots"], list) and robots_str:
-            for pat in rule["robots"]:
-                m = re.search(pat, robots_str, re.IGNORECASE)
-                if m:
-                    matched = True
-                    if m.groups() and m.group(1):
-                        version = version or m.group(1).strip()
-
-        # 9. URL / Hostname Match
-        if "url" in rule and isinstance(rule["url"], list) and url_str:
-            for pat in rule["url"]:
-                m = re.search(pat, url_str, re.IGNORECASE)
-                if m:
-                    matched = True
-                    if m.groups() and m.group(1):
-                        version = version or m.group(1).strip()
+        # 7. JavaScript Pattern Match in Inline JS (Evidence)
+        if "js" in rule and inline_js_text:
+            js_pats = rule["js"]
+            if isinstance(js_pats, list):
+                for j_pat in js_pats:
+                    m = re.search(j_pat, inline_js_text, re.IGNORECASE)
+                    if m:
+                        matched = True
+                        if m.groups() and m.group(1):
+                            version = version or m.group(1).strip()
 
         if matched:
             detected_techs[tech_name] = {
@@ -288,253 +249,43 @@ def identify_technologies(
                 "category": category
             }
 
-    # Resolve relationships for passive findings
-    detected_techs = _resolve_relationships(detected_techs, fingerprints)
-
-    categories: Dict[str, List[Dict[str, Any]]] = {}
-    tech_list = []
-
-    for tech_name, info in sorted(detected_techs.items(), key=lambda x: x[0].lower()):
-        cat = info["category"]
-        if cat not in categories:
-            categories[cat] = []
-        categories[cat].append({
-            "name": tech_name,
-            "version": info["version"]
-        })
-        tech_list.append(info)
+    # Group into categories
+    categories_dict: Dict[str, List[Dict[str, Any]]] = {}
+    for tech in detected_techs.values():
+        cat = tech["category"]
+        if cat not in categories_dict:
+            categories_dict[cat] = []
+        categories_dict[cat].append(tech)
 
     return {
-        "technologies": tech_list,
-        "categories": categories,
-        "total": len(tech_list),
-        "raw_detected": detected_techs
+        "technologies": list(detected_techs.values()),
+        "categories": categories_dict,
+        "total_detected": len(detected_techs)
     }
 
-def collect_probe_paths(fingerprints: Dict[str, Any]) -> List[str]:
-    """
-    Collects and deduplicates technology-specific probe paths defined in the fingerprint database.
-    """
-    paths_set: Set[str] = set()
-    for rule in fingerprints.values():
-        for p in rule.get("paths", []):
-            if isinstance(p, str) and p.strip() and p.strip() != "/":
-                norm = "/" + p.strip("/").strip()
-                if p.endswith("/"):
-                    norm += "/"
-                paths_set.add(norm)
-        for probe in rule.get("probes", []):
-            p = probe.get("path")
-            if isinstance(p, str) and p.strip() and p.strip() != "/":
-                norm = "/" + p.strip("/").strip()
-                if p.endswith("/"):
-                    norm += "/"
-                paths_set.add(norm)
-    return sorted(list(paths_set))
-
-def evaluate_active_probes(
-    probe_responses: Dict[str, Dict[str, Any]],
-    fingerprints: Dict[str, Any],
-    root_html: Optional[str] = None
-) -> Dict[str, Dict[str, Any]]:
-    """
-    Evaluates technology-specific active probe responses against probe rules.
-    Prevents false positives from wildcard routing / SPA fallbacks.
-    """
-    active_detected: Dict[str, Dict[str, Any]] = {}
-    normalized_root = root_html.strip() if root_html else ""
-
-    for tech_name, rule in fingerprints.items():
-        category = rule.get("category", "Other")
-        matched = False
-        version: Optional[str] = None
-
-        # 1. Explicit Probe Objects
-        for probe in rule.get("probes", []):
-            path = probe.get("path")
-            if not path:
-                continue
-            norm_path = "/" + path.strip("/").strip()
-            if path.endswith("/"):
-                norm_path += "/"
-                
-            resp = probe_responses.get(norm_path)
-            if not resp or "error" in resp:
-                continue
-
-            status = resp.get("status_code", 0)
-            expected_status = probe.get("status")
-            if expected_status is not None:
-                if isinstance(expected_status, int) and status != expected_status:
-                    continue
-                elif isinstance(expected_status, list) and status not in expected_status:
-                    continue
-
-            content_text = resp.get("content_text", "")
-            headers_dict = resp.get("headers", {})
-            headers_lower = {k.lower(): str(v) for k, v in headers_dict.items()}
-
-            # Check wildcard / SPA fallback: if probe response is identical to homepage, ignore
-            if normalized_root and len(content_text) > 100 and content_text.strip() == normalized_root:
-                continue
-
-            # Check negative HTML / signature
-            neg_html = probe.get("negative_html", [])
-            if any(re.search(pat, content_text, re.IGNORECASE) for pat in neg_html):
-                continue
-
-            # Check positive HTML
-            pos_html = probe.get("html", [])
-            if pos_html and not any(re.search(pat, content_text, re.IGNORECASE) for pat in pos_html):
-                continue
-
-            # Check headers
-            probe_headers = probe.get("headers", {})
-            hdr_match = True
-            for h_name, pat in probe_headers.items():
-                if h_name.lower() not in headers_lower or not re.search(pat, headers_lower[h_name.lower()], re.IGNORECASE):
-                    hdr_match = False
-                    break
-            if not hdr_match:
-                continue
-
-            # If probe has neither html nor headers nor cookies, do not match on status code alone
-            if not pos_html and not probe_headers:
-                continue
-
-            matched = True
-            ver_regex = probe.get("version_regex")
-            if ver_regex:
-                m = re.search(ver_regex, content_text, re.IGNORECASE)
-                if m and m.groups() and m.group(1):
-                    version = m.group(1).strip()
-            break
-
-        # 2. Probe Paths with Standard Rules
-        if not matched and "paths" in rule:
-            for path in rule["paths"]:
-                norm_path = "/" + path.strip("/").strip()
-                if path.endswith("/"):
-                    norm_path += "/"
-                resp = probe_responses.get(norm_path)
-                if resp and "error" not in resp and resp.get("status_code") == 200:
-                    content_text = resp.get("content_text", "")
-                    if normalized_root and len(content_text) > 100 and content_text.strip() == normalized_root:
-                        continue
-
-                    sub_res = identify_technologies(
-                        headers=resp.get("headers", {}),
-                        html=content_text,
-                        fingerprints={tech_name: rule}
-                    )
-                    sub_detected = sub_res.get("raw_detected", {})
-                    if tech_name in sub_detected:
-                        matched = True
-                        version = sub_detected[tech_name].get("version")
-                        break
-
-        if matched:
-            active_detected[tech_name] = {
-                "name": tech_name,
-                "version": version,
-                "category": category
-            }
-
-    return active_detected
-
-async def get_tech_fingerprint(
-    domain: str,
-    custom_fingerprints_path: Optional[str] = None
-) -> Dict[str, Any]:
-    """
-    Performs passive fingerprinting and controlled active probe analysis for target domain.
-    """
+async def analyze_technology(domain: str) -> Dict[str, Any]:
+    """Fetches target homepage and inspects technology stack."""
     url = f"https://{domain}"
     response = await safe_get(url)
     if "error" in response:
         url = f"http://{domain}"
         response = await safe_get(url)
         if "error" in response:
-            return {"error": "Could not fetch target response (Target unreachable or blocked)"}
+            return {"error": "Target unreachable or offline"}
 
     headers = response.get("headers", {})
     html_content = response.get("content_text", "")
+    
+    # Try fetching robots.txt for safe additional asset cues
+    robots_resp = await safe_get(f"{url.rstrip('/')}/robots.txt")
+    robots_text = robots_resp.get("content_text", "") if "error" not in robots_resp else ""
 
-    # Passive check of robots.txt for evidence
-    robots_content = ""
-    try:
-        robots_resp = await safe_get(f"{url.rstrip('/')}/robots.txt")
-        if "error" not in robots_resp and robots_resp.get("status_code") == 200:
-            robots_content = robots_resp.get("content_text", "")
-    except Exception:
-        pass
-
-    fingerprints = load_fingerprints(custom_fingerprints_path)
-
-    # 1. Passive Identification
-    passive_res = identify_technologies(
+    return identify_technologies(
         headers=headers,
         html=html_content,
-        fingerprints=fingerprints,
-        url=url,
-        robots_txt=robots_content
+        url=response.get("url", url),
+        robots_txt=robots_text
     )
-    detected_techs = dict(passive_res.get("raw_detected", {}))
 
-    # 2. Active Controlled Probing
-    probe_paths = collect_probe_paths(fingerprints)
-    if probe_paths:
-        base_url = url.rstrip("/")
-        semaphore = asyncio.Semaphore(10)
-
-        async def _fetch_probe(path: str) -> tuple:
-            async with semaphore:
-                resp = await safe_get(f"{base_url}{path}")
-                if "error" in resp and base_url.startswith("https://"):
-                    resp_http = await safe_get(f"http://{domain}{path}")
-                    if "error" not in resp_http:
-                        resp = resp_http
-                return path, resp
-
-        probe_tasks = [_fetch_probe(p) for p in probe_paths]
-        probe_results = await asyncio.gather(*probe_tasks, return_exceptions=True)
-
-        probe_responses: Dict[str, Dict[str, Any]] = {}
-        for item in probe_results:
-            if isinstance(item, tuple) and len(item) == 2:
-                p, r = item
-                if isinstance(r, dict):
-                    probe_responses[p] = r
-
-        # Evaluate Active Probes with root_html wildcard protection
-        active_techs = evaluate_active_probes(probe_responses, fingerprints, root_html=html_content)
-        
-        # Merge active detections
-        for name, info in active_techs.items():
-            if name not in detected_techs:
-                detected_techs[name] = info
-            elif not detected_techs[name].get("version") and info.get("version"):
-                detected_techs[name]["version"] = info["version"]
-
-    # 3. Resolve Relationships (implies, requires, excludes) with Cycle Protection
-    detected_techs = _resolve_relationships(detected_techs, fingerprints)
-
-    # 4. Group into categories
-    categories: Dict[str, List[Dict[str, Any]]] = {}
-    tech_list = []
-
-    for tech_name, info in sorted(detected_techs.items(), key=lambda x: x[0].lower()):
-        cat = info["category"]
-        if cat not in categories:
-            categories[cat] = []
-        categories[cat].append({
-            "name": tech_name,
-            "version": info["version"]
-        })
-        tech_list.append(info)
-
-    return {
-        "technologies": tech_list,
-        "categories": categories,
-        "total": len(tech_list)
-    }
+# Alias for module registry compatibility
+get_tech_fingerprint = analyze_technology

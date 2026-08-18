@@ -18,32 +18,28 @@
 
 ## 📖 Overview
 
-**OpenRecon** is a modern, modular, non-intrusive local OSINT (Open Source Intelligence) and reconnaissance command-line tool built for security researchers, penetration testers, and system administrators.
+**OpenRecon** is a modern, modular, non-intrusive local OSINT (Open Source Intelligence) command-line reconnaissance tool built for security researchers, penetration testers, and system administrators.
 
-It performs passive, targeted reconnaissance against target domains and IP addresses without using noisy wordlists, directory brute-forcing, or disruptive scanners.
+It performs high-precision, evidence-based reconnaissance against target domains and IP addresses without using noisy wordlists, aggressive brute-forcing, or disruptive scanners. Every reported observation is strictly derived from direct protocol handshakes, DNS records, HTTP responses, certificate metadata, and passive intelligence sources.
 
 ---
 
 ## 🚀 Key Features
 
-*   **🛡️ Passive Subdomain Discovery**: Discovers valid subdomains exclusively through Certificate Transparency logs (`crt.sh`) and public DNS records.
-*   **🌐 DNS Intelligence**: Queries and analyzes standard DNS record sets (`A`, `AAAA`, `CNAME`, `MX`, `NS`, `SOA`, `TXT`).
-*   **✉️ Dedicated Email Security Posture**: Evaluates `SPF` records and policy enforcement levels (`Strict`, `SoftFail`, `Over-permissive`), `DMARC` policies (`None`, `Quarantine`, `Reject`), and `DKIM` presence.
-*   **🔒 SSL/TLS Certificate Analysis**: Inspects certificate validity, issuer, dates, SANs, cipher suites, signature algorithms, and TLS protocol versions.
-*   **🧱 Wappalyzer-Style Technology Fingerprinting**:
-    *   Data-driven engine powered by an authoritative database of **470+ technologies** across 17 categories.
-    *   Multi-signal passive inspection across HTTP response headers, cookies, scripts, CSS assets, DOM markers, `<meta>` generator tags, inline JS properties, robots.txt, and URL patterns.
-    *   Exact version extraction when directly exposed in headers/assets (never guesses or infers versions).
-    *   Recursive, cycle-safe relationship resolution (`implies`, `requires`, `excludes`).
-    *   Targeted active probing with wildcard SPA fallback protection and negative signature filtering.
-*   **📁 Target-Derived Directory Exposure**: Discovers directory references directly from target HTML attributes (`<a href>`, `<link href>`, `<script src>`, `<img src>`), `robots.txt`, and `sitemap.xml`, verifying whether discovered directories expose open listings without brute-forcing.
-*   **📂 Public Metadata Files Check**: Safe allowlisted discovery of `robots.txt`, `sitemap.xml`, `security.txt`, `humans.txt`, and `ads.txt`.
-*   **🔐 HTTP Security Headers Posture**: Evaluates essential headers (`HSTS`, `CSP`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`).
-*   **🔌 Port Reconnaissance**: Fast, concurrent TCP banner inspection of top common service ports (`80`, `443`, `22`, `21`, `25`, `53`, `3306`, `8080`, `8443`).
-*   **🌍 IP & Infrastructure Intelligence**: Geolocation, ISP classification, Autonomous System Number (ASN), Provider, and Cloud/Hosting categorization.
-*   **✨ Clean Terminal UX**: TrueColor ANSI banner with transparent terminal background support and clean aligned output.
-*   **💾 Text Report Export**: Direct export of structured scan results to formatted text reports (`.txt` only).
-*   **🔄 Simple Opt-In GitHub Updater**: Check and install official GitHub releases or tags on demand (`openrecon --check-update`) with zero startup latency for normal scans.
+*   **🛡️ Multi-Source Passive Subdomain Discovery**: Aggregates genuine subdomains across Certificate Transparency logs and passive intelligence feeds (`crt.sh`, `certspotter`, `urlscan`, `hackertarget`, `wayback`, `rapiddns`, `anubis`) with case-insensitive deduplication, apex exclusion, zero synthetic `www.` generation, and a 50-item hard cap.
+*   **🌐 Comprehensive DNS Intelligence**: Extracts `A`, `AAAA` (IPv6), `CNAME`, structured `MX` (hostname + priority), `NS`, structured `SOA` (primary nameserver, mailbox, serial, refresh, retry, expire, min TTL), record TTLs, and complete un-truncated `TXT` values.
+*   **✉️ Authoritative Email Security Posture**: Evaluates single-record `SPF` with strict qualifier semantics (`-all` → `STRICT`, `~all` → `SOFTFAIL`, `?all` → `NEUTRAL`, `+all` → `OVER-PERMISSIVE`, `redirect=` → `REDIRECT`) and RFC 7208 multiple-SPF invalidation; parses `DMARC` policies (`reject`, `quarantine`, `none`), subdomain policies, rua/ruf, and percentage; reports `DKIM` presence without brute-forcing.
+*   **🔒 SSL/TLS Certificate Analysis**: Inspects certificate validity, Certificate Version (e.g. `v3`), Key Type (RSA, EC, Ed25519), Key Size (bits), Certificate Chain Status (`VERIFIED`, `SELF-SIGNED`, `UNTRUSTED`), RFC 6125 SAN hostname validation, handshake cipher suites, and TLS protocol version.
+*   **🧱 Evidence-Based Technology Fingerprinting**: Multi-signal passive inspection across HTTP response headers, cookies, scripts, CSS assets, DOM markers, `<meta>` generator tags, inline JS properties, and robots.txt across 9 standardized categories (`Web Server`, `Backend`, `Frontend`, `CMS`, `Framework`, `Runtime`, `Analytics`, `JavaScript Libraries`, `CDN / Proxy`). Reports versions only when directly observed.
+*   **📁 Deterministic Directory Exposure**: Tests candidate paths derived from target HTML, `robots.txt`, and `sitemap.xml`; strictly distinguishes verified directory indexing signatures (`200 EXPOSED`) from ordinary HTTP 200/401/403 pages, outputting `No exposed directories found.` when no open listings exist.
+*   **📂 Public Metadata Files Check**: Safe allowlisted discovery of `robots.txt`, `sitemap.xml`, `security.txt`, `.well-known/security.txt`, `humans.txt`, and `ads.txt` (only reporting files returning HTTP 200 OK).
+*   **🔐 HTTP Security Headers Posture**: Evaluates 8 standard headers (`Strict-Transport-Security`, `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`) with duplicate value normalization.
+*   **🔌 Port Reconnaissance**: Fast, concurrent TCP banner inspection of top common service ports (`21`, `22`, `25`, `53`, `80`, `443`, `3306`, `3389`, `8080`, `8443`) with banner version parsing for SSH, FTP, and SMTP without guessing.
+*   **🌍 Infrastructure & IP Intelligence**: Resolves Primary IPv4, IPv6, Additional IPs, Geolocation, ISP, Autonomous System Number (ASN), Provider, and Cloud/CDN Hosting categorization.
+*   **📋 Domain Registration Details**: Extracts Registrar, Registry Domain ID, Registrar IANA ID, Creation/Updated/Expiration dates, domain age, and EPP status codes while filtering privacy placeholders.
+*   **✨ Unified Aligned Key-Value CLI**: Clean terminal formatting with 4-space indentation, consistent key widths, and transparent background support.
+*   **💾 Formatted Text Report Export**: Direct export of structured scan results to `.txt` files (`-o / --output`).
+*   **🔄 Confirmed Opt-In GitHub Updater**: Check and install official GitHub releases or tags on demand (`openrecon --check-update`) with zero startup latency for normal scans.
 
 ---
 
@@ -74,10 +70,9 @@ After installation, the `openrecon` command is available directly in your termin
 openrecon example.com
 
 # 2. Targeted module scan (-m / --modules)
-openrecon example.com -m tech
-openrecon example.com -m dns,ssl,headers
+openrecon example.com -m dns,ssl,tech
 openrecon example.com -m dns,email,whois
-openrecon example.com -m tech,directories,public-files
+openrecon example.com -m headers,security-headers,directories
 
 # 3. Export scan results to a text file (-o / --output, .txt only)
 openrecon example.com -o results.txt
@@ -103,27 +98,27 @@ openrecon --help
 
 | Module Identifier (`-m`) | Module Name | Primary Reconnaissance Signals |
 | :--- | :--- | :--- |
-| `dns` | DNS Recon | Standard records (`A`, `AAAA`, `CNAME`, `MX`, `NS`, `SOA`, `TXT`) |
-| `whois` | Domain Registration | Registrar, creation/expiration dates, domain age |
-| `ssl` | SSL / TLS Analysis | Certificate validity, issuer, SANs, cipher, TLS protocol version |
-| `email` | Email Security | SPF records, DMARC policies (`reject`/`quarantine`/`none`), DKIM check |
-| `headers` | HTTP Analysis | Status codes, server header, content-type, redirects, final URL |
-| `security-headers` | Security Headers | HSTS, CSP, X-Frame-Options, X-Content-Type-Options posture |
-| `subdomains` | Subdomain Discovery | Passive enumeration via Certificate Transparency logs (`crt.sh`) |
-| `tech` | Technology Stack | 470+ technologies (Web servers, CDN, CMS, Frameworks, Analytics) |
-| `ports` | Open Ports | Concurrent TCP inspection on common service ports |
-| `ip` | Infrastructure Intelligence | IP geolocation, ISP, ASN, provider, and cloud hosting classification |
-| `public-files` | Public Files | Checks `robots.txt`, `sitemap.xml`, `security.txt`, `humans.txt`, `ads.txt` |
-| `directories` | Directory Exposure | Verifies open listings on target-referenced asset directories |
+| `dns` | DNS Recon | Standard records (`A`, `AAAA`, `CNAME`, `MX`, `NS`, `SOA`, `TXT`) with TTLs and structured fields |
+| `whois` | Domain Registration | Registrar, Registry ID, Registrar ID, Creation/Updated/Expiration dates, Age, Status |
+| `ssl` | SSL / TLS Analysis | Certificate validity, Version, Key Type/Size, Chain Status, SANs, Cipher, TLS protocol |
+| `email` | Email Security | Authoritative SPF records, qualifiers, includes, DMARC policies, DKIM check |
+| `headers` | HTTP Analysis | Status codes, Server, Content-Type, Content-Length, HTTP Version, Redirects, Final URL |
+| `security-headers` | Security Headers | HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy |
+| `subdomains` | Subdomain Discovery | Passive enumeration across CT logs & public feeds (`crt.sh`, `certspotter`, `urlscan`, etc.) |
+| `tech` | Technology Stack | Evidence-based detection across 9 categories (Web Server, Backend, CMS, CDN, etc.) |
+| `ports` | Open Ports | Concurrent TCP check and safe banner interrogation (SSH, FTP, SMTP) on top ports |
+| `ip` | Infrastructure Intelligence | IPv4, IPv6, Additional IPs, Geolocation, ISP, ASN, Provider, Hosting Type |
+| `public-files` | Public Files | Checks HTTP 200 status for `robots.txt`, `sitemap.xml`, `security.txt`, `humans.txt`, etc. |
+| `directories` | Directory Exposure | Verifies confirmed open directory listing indexing signatures (`200 EXPOSED`) |
 
 ---
 
 ## 🧪 Running Tests
 
-OpenRecon includes a comprehensive automated test suite covering all modules, version tracking, CLI options, updater diagnostics, and technology fingerprint regression tests:
+OpenRecon includes a comprehensive automated test suite covering all 12 modules, version tracking, CLI options, updater diagnostics, cross-module consistency, and regression checks:
 
 ```bash
-python -m unittest discover tests
+venv/bin/python -m unittest discover tests
 ```
 
 ---

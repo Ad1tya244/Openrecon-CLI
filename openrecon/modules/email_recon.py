@@ -1,16 +1,19 @@
-"""
-OpenRecon Email Security Module (SPF, DMARC, DKIM DNS checks).
-"""
+import re
 import dns.resolver
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from openrecon.config import settings
 
-def analyze_email_security(domain: str) -> Dict[str, Any]:
+def analyze_email_security(
+    domain: str,
+    txt_records: Optional[List[str]] = None
+) -> Dict[str, Any]:
     """
     Performs passive email security posture checks:
-    - SPF TXT record extraction and policy evaluation
-    - DMARC TXT record extraction and policy enforcement level
-    - DKIM _domainkey existence check
+    - SPF: Parses the single authoritative SPF TXT record returned for the target domain.
+           Derives SPF Value, Final Qualifier, Includes, and Status strictly from this record.
+           Flags multiple SPF records as INVALID per RFC 7208.
+    - DMARC: Extracts policy, subdomain policy, rua, ruf, percentage.
+    - DKIM: Reports NOT ENUMERATED unless selectors are observed passively.
     """
     resolver = dns.resolver.Resolver()
     resolver.nameservers = settings.DNS_RESOLVERS
@@ -23,7 +26,7 @@ def analyze_email_security(domain: str) -> Dict[str, Any]:
             records = []
             for rdata in answers:
                 try:
-                    text = b''.join(rdata.strings).decode('utf-8')
+                    text = b''.join(rdata.strings).decode('utf-8', errors='replace')
                 except Exception:
                     text = rdata.to_text().strip('"')
                 records.append(text)
@@ -31,57 +34,111 @@ def analyze_email_security(domain: str) -> Dict[str, Any]:
         except Exception:
             return []
 
-    # 1. SPF TXT Query
-    domain_txt = query_txt(domain)
-    spf_record = next((r for r in domain_txt if "v=spf1" in r), None)
+    # 1. SPF Analysis
+    domain_txt = txt_records if txt_records is not None else query_txt(domain)
     
-    spf_data = {
-        "present": bool(spf_record),
-        "record": spf_record,
-        "status": "Missing"
+    spf_candidates = []
+    for r in domain_txt:
+        s = r.strip()
+        if re.match(r"^v=spf1(?:\s|$)", s, re.IGNORECASE):
+            spf_candidates.append(s)
+
+    spf_data: Dict[str, Any] = {
+        "record": "MISSING",
+        "status": "MISSING",
+        "value": None,
+        "final_qualifier": None,
+        "includes": []
     }
 
-    if spf_record:
-        if "+all" in spf_record:
-            spf_data["status"] = "Over-permissive (+all)"
-        elif "-all" in spf_record:
-            spf_data["status"] = "Strict (-all)"
-        elif "~all" in spf_record:
-            spf_data["status"] = "SoftFail (~all)"
-        elif "?all" in spf_record:
-            spf_data["status"] = "Neutral (?all)"
+    if len(spf_candidates) > 1:
+        # RFC 7208 Section 3.2: Multiple SPF records -> PermError / INVALID
+        spf_data["record"] = "INVALID"
+        spf_data["status"] = "INVALID (Multiple SPF records published)"
+        spf_data["value"] = None
+        spf_data["final_qualifier"] = None
+        spf_data["includes"] = []
+    elif len(spf_candidates) == 1:
+        raw_spf = spf_candidates[0]
+        
+        # Check basic syntax
+        if not raw_spf.lower().startswith("v=spf1"):
+            spf_data["record"] = "INVALID"
+            spf_data["status"] = "INVALID"
         else:
-            spf_data["status"] = "Unknown/Loose"
-    else:
-        spf_data["status"] = "None"
+            spf_data["record"] = "PRESENT"
+            spf_data["value"] = raw_spf
 
-    # 2. DMARC TXT Query
+            # Qualifier extraction strictly from this record
+            m = re.search(r"(?:^|\s)([-+~?]all)(?:\s|$)", raw_spf, re.IGNORECASE)
+            if m:
+                final_q = m.group(1).lower()
+                spf_data["final_qualifier"] = final_q
+
+                if final_q == "-all":
+                    spf_data["status"] = "STRICT"
+                elif final_q == "~all":
+                    spf_data["status"] = "SOFTFAIL"
+                elif final_q == "+all":
+                    spf_data["status"] = "OVER-PERMISSIVE"
+                elif final_q == "?all":
+                    spf_data["status"] = "NEUTRAL"
+            elif re.search(r"(?:^|\s)redirect=([^\s]+)", raw_spf, re.IGNORECASE):
+                spf_data["final_qualifier"] = None
+                spf_data["status"] = "REDIRECT"
+            else:
+                spf_data["final_qualifier"] = None
+                spf_data["status"] = "UNKNOWN"
+
+            # Includes: strictly from this single authoritative record
+            includes = re.findall(r"(?:^|\s)include:([^\s]+)", raw_spf, re.IGNORECASE)
+            spf_data["includes"] = sorted(list(set(includes)))
+
+    # 2. DMARC Analysis
     dmarc_records = query_txt(f"_dmarc.{domain}")
-    dmarc_record = next((r for r in dmarc_records if "v=DMARC1" in r), None)
-    dmarc_policy = "None"
+    dmarc_candidates = [r.strip() for r in dmarc_records if re.match(r"^v=DMARC1(?:\s|;|$)", r.strip(), re.IGNORECASE)]
 
-    if dmarc_record:
-        parts = dmarc_record.split(";")
-        for part in parts:
-            if part.strip().startswith("p="):
-                dmarc_policy = part.split("=")[1].strip()
-                break
-
-    dmarc_data = {
-        "present": bool(dmarc_record),
-        "record": dmarc_record,
-        "policy": dmarc_policy
+    dmarc_data: Dict[str, Any] = {
+        "record": "MISSING",
+        "policy": None,
+        "subdomain_policy": None,
+        "rua": None,
+        "ruf": None,
+        "percentage": None
     }
 
-    # 3. DKIM Broad Check
-    domainkey_records = query_txt(f"_domainkey.{domain}")
-    dkim_present = len(domainkey_records) > 0
+    if len(dmarc_candidates) > 1:
+        dmarc_data["record"] = "INVALID"
+        dmarc_data["policy"] = "INVALID (Multiple DMARC records published)"
+    elif len(dmarc_candidates) == 1:
+        dmarc_raw = dmarc_candidates[0]
+        dmarc_data["record"] = "PRESENT"
+        tags = {}
+        for part in dmarc_raw.split(";"):
+            if "=" in part:
+                k, v = part.split("=", 1)
+                tags[k.strip().lower()] = v.strip()
+
+        p = tags.get("p", "none").lower()
+        dmarc_data["policy"] = p
+        
+        sp = tags.get("sp")
+        dmarc_data["subdomain_policy"] = sp.lower() if sp else f"Inherit ({p})"
+        
+        dmarc_data["rua"] = tags.get("rua")
+        dmarc_data["ruf"] = tags.get("ruf")
+        
+        pct = tags.get("pct")
+        dmarc_data["percentage"] = f"{pct}%" if pct else "100%"
+
+    # 3. DKIM Broad Check (Never brute-forced)
+    dkim_data: Dict[str, Any] = {
+        "status": "NOT ENUMERATED",
+        "selector": None
+    }
 
     return {
         "spf": spf_data,
         "dmarc": dmarc_data,
-        "dkim_dns_check": {
-            "_domainkey_exists": dkim_present,
-            "note": "Selectors not enumerated passively"
-        }
+        "dkim": dkim_data
     }

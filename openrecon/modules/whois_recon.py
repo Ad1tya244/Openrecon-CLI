@@ -1,13 +1,37 @@
 import socket
 import re
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from datetime import datetime
 from openrecon.config import settings
 
+PRIVACY_PATTERNS = [
+    r"redacted",
+    r"privacy",
+    r"whoisguard",
+    r"proxy",
+    r"gdpr",
+    r"withheld",
+    r"contact privacy",
+    r"not disclosed",
+    r"statutory mask",
+    r"data protected",
+    r"private person"
+]
+
+def is_redacted_value(val: Optional[str]) -> bool:
+    """Checks whether a WHOIS value is an obvious privacy/redaction placeholder."""
+    if not val or not isinstance(val, str):
+        return True
+    val_lower = val.lower().strip()
+    if not val_lower or val_lower in ("none", "n/a", "unknown", "null"):
+        return True
+    for p in PRIVACY_PATTERNS:
+        if re.search(p, val_lower):
+            return True
+    return False
+
 def get_whois_server(domain: str) -> str:
-    """
-    Simple heuristic to find whois server.
-    """
+    """Finds the appropriate whois server for a domain."""
     tld = domain.split('.')[-1]
     servers = {
         'com': 'whois.verisign-grs.com',
@@ -18,7 +42,6 @@ def get_whois_server(domain: str) -> str:
         'uk': 'whois.nic.uk',
         'jp': 'whois.jprs.jp',
         'in': 'whois.nixiregistry.in',
-        'ac.in': 'whois.nixiregistry.in',
         'de': 'whois.denic.de',
         'ca': 'whois.cira.ca',
         'eu': 'whois.eu',
@@ -33,9 +56,7 @@ def get_whois_server(domain: str) -> str:
     return servers.get(tld, f"whois.nic.{tld}")
 
 def parse_date(date_str: str) -> Optional[datetime]:
-    """
-    Attempts to parse WHOIS date strings in various formats.
-    """
+    """Attempts to parse WHOIS date strings in various formats."""
     if not date_str:
         return None
         
@@ -67,16 +88,20 @@ def parse_date(date_str: str) -> Optional[datetime]:
 
 def parse_whois_data(raw_text: str) -> Dict[str, Any]:
     """
-    Parses raw WHOIS text for key information using regex.
+    Parses raw WHOIS text for genuine information without fabricating fields.
+    Filters privacy/redaction placeholders.
     """
-    data = {
+    data: Dict[str, Any] = {
         "registrar": None,
+        "registry_domain_id": None,
+        "registrar_iana_id": None,
         "creation_date": None,
+        "updated_date": None,
         "expiration_date": None,
-        "age_days": None,
-        "name_servers": [],
+        "age_years": None,
+        "status": None,
+        "registrant": None,
         "scan_date": datetime.now().isoformat(),
-        "flags": [],
         "raw_preview": raw_text[:500] + "..." if raw_text else ""
     }
     
@@ -87,21 +112,40 @@ def parse_whois_data(raw_text: str) -> Dict[str, Any]:
             r"registrar:\s*(.+)",
             r"Organization:\s*(.+)"
         ],
+        "registry_domain_id": [
+            r"Registry Domain ID:\s*(.+)",
+            r"Domain ID:\s*(.+)"
+        ],
+        "registrar_iana_id": [
+            r"Registrar IANA ID:\s*(\d+)",
+            r"IANA ID:\s*(\d+)"
+        ],
         "creation_date": [
             r"Creation Date:\s*(.+)",
             r"Created:\s*(.+)",
             r"Registered on:\s*(.+)",
             r"created:\s*(.+)",
-            r"Created On:\s*(.+)",
-            r"Creation Date\s*:\s*(.+)"
+            r"Created On:\s*(.+)"
+        ],
+        "updated_date": [
+            r"Updated Date:\s*(.+)",
+            r"Last Updated On:\s*(.+)",
+            r"modified:\s*(.+)",
+            r"last-update:\s*(.+)",
+            r"Last Modified:\s*(.+)"
         ],
         "expiration_date": [
             r"Registry Expiry Date:\s*(.+)",
             r"Expiration Date:\s*(.+)",
             r"Expiry date:\s*(.+)",
             r"paid-till:\s*(.+)",
-            r"Expires On:\s*(.+)",
-            r"Expiration Date\s*:\s*(.+)"
+            r"Expires On:\s*(.+)"
+        ],
+        "registrant": [
+            r"Registrant Organization:\s*(.+)",
+            r"Registrant Name:\s*(.+)",
+            r"registrant:\s*(.+)",
+            r"tech-c:\s*(.+)"
         ]
     }
     
@@ -109,35 +153,37 @@ def parse_whois_data(raw_text: str) -> Dict[str, Any]:
         for pattern in regex_list:
             match = re.search(pattern, raw_text, re.IGNORECASE)
             if match:
-                data[key] = match.group(1).strip()
+                val = match.group(1).strip()
+                if key == "registrant":
+                    if not is_redacted_value(val):
+                        data[key] = val
+                else:
+                    data[key] = val
                 break
 
-    # Name servers
-    ns_matches = re.findall(r"Name Server:\s*([^\s\r\n]+)", raw_text, re.IGNORECASE)
-    if ns_matches:
-        data["name_servers"] = sorted(list(set([ns.lower() for ns in ns_matches])))
-                
+    # EPP Status Codes
+    status_matches = re.findall(r"(?:Domain Status|status):\s*([a-zA-Z0-9]+)", raw_text, re.IGNORECASE)
+    if status_matches:
+        unique_statuses = []
+        for st in status_matches:
+            st_clean = st.strip()
+            if st_clean and st_clean.lower() not in [s.lower() for s in unique_statuses]:
+                unique_statuses.append(st_clean)
+        data["status"] = unique_statuses[:3] if unique_statuses else None
+
     # Calculate Age
     if data["creation_date"]:
         created_dt = parse_date(data["creation_date"])
         if created_dt:
             data["creation_date_iso"] = created_dt.isoformat()
             now = datetime.now()
-            age = (now - created_dt).days
-            data["age_days"] = age
-            
-            if age < 90:
-                data["flags"].append("Recently registered (Domain age < 90 days)")
-        else:
-            data["creation_date_parsed"] = "Failed to parse"
+            age_days = (now - created_dt).days
+            data["age_years"] = round(age_days / 365.25, 1)
 
     return data
 
 def get_whois_info(domain: str) -> Dict[str, Any]:
-    """
-    Retrieves and parses WHOIS info using raw sockets (No subprocess).
-    Safely handles connection errors and timeouts.
-    """
+    """Retrieves and parses WHOIS info using raw sockets."""
     server = get_whois_server(domain)
     
     try:
@@ -157,15 +203,10 @@ def get_whois_info(domain: str) -> Dict[str, Any]:
 
     except socket.timeout:
         return {
-            "error": f"Whois connection to {server} timed out",
-            "registrar": "Unknown",
-            "creation_date": "Unknown",
-            "flags": ["Whois Timeout"]
+            "error": f"Whois connection to {server} timed out"
         }
     except Exception as e:
         return {
             "error": "Whois lookup failed",
-            "details": str(e), 
-            "registrar": "Unknown",
-            "creation_date": "Unknown"
+            "details": str(e)
         }

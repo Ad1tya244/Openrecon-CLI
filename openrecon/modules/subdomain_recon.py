@@ -3,40 +3,21 @@ import json
 import re
 import asyncio
 import urllib.parse
-import dns.resolver
 from typing import List, Dict, Any, Optional, Set, Tuple
 from openrecon.config import settings
 
 MAX_SUBDOMAINS = 50
 DEFAULT_SOURCE_TIMEOUT = 10.0
 
-SENSITIVE_KEYWORDS = {
-    "dev": "Development Environment",
-    "staging": "Staging Environment",
-    "stg": "Staging Environment",
-    "test": "Test Environment",
-    "uat": "UAT Environment",
-    "admin": "Administrative Interface",
-    "api": "API Endpoint",
-    "internal": "Internal Infrastructure",
-    "vpn": "Remote Access",
-    "demo": "Demo Environment",
-    "beta": "Beta Environment",
-    "mail": "Mail Server",
-    "corp": "Corporate Network",
-    "portal": "Access Portal",
-    "auth": "Authentication Service",
-}
-
 def normalize_subdomain(raw: str, target_domain: str) -> Optional[str]:
     """
-    Normalizes and validates a candidate subdomain:
+    Strictly normalizes and validates a candidate subdomain:
     - Strips whitespace, quotes, and trailing dots
     - Lowercases
     - Strips wildcard prefix (*. or *)
     - Excludes the apex domain itself
     - Ensures it strictly ends with '.{target_domain}'
-    - Validates label syntax
+    - Validates DNS label syntax
     - NEVER manufactures or infers 'www.' variants
     """
     if not raw or not isinstance(raw, str):
@@ -172,57 +153,24 @@ async def _fetch_source_safe(
     source_name: str,
     fetch_func,
     domain: str,
-    client: httpx.AsyncClient,
-    max_retries: int = 1
-) -> Tuple[str, List[str], str]:
-    """
-    Executes a single passive source query with bounded retries and timeout isolation.
-    Returns: (source_name, raw_candidates_list, error_str_or_dash)
-    """
-    last_err = "-"
-    for attempt in range(max_retries + 1):
-        try:
-            results = await fetch_func(domain, client)
-            return (source_name, results, "-")
-        except Exception as e:
-            last_err = str(e) or "Request failed"
-            if attempt < max_retries:
-                await asyncio.sleep(0.5)
-                continue
-    return (source_name, [], last_err)
-
-async def _check_dns_resolution(hostname: str, resolver: dns.resolver.Resolver) -> Dict[str, Any]:
-    def _sync_resolve():
-        resolved_ips = []
-        try:
-            answers = resolver.resolve(hostname, "A")
-            for rdata in answers:
-                resolved_ips.append(rdata.to_text())
-        except Exception:
-            pass
-        try:
-            answers = resolver.resolve(hostname, "AAAA")
-            for rdata in answers:
-                resolved_ips.append(rdata.to_text())
-        except Exception:
-            pass
-        return resolved_ips
-    
-    ips = await asyncio.to_thread(_sync_resolve)
-    return {
-        "resolves": len(ips) > 0,
-        "ips": ips
-    }
+    client: httpx.AsyncClient
+) -> List[str]:
+    try:
+        return await fetch_func(domain, client)
+    except Exception:
+        return []
 
 async def enumerate_subdomains(domain: str) -> Dict[str, Any]:
     """
-    Enumerates subdomains using genuine passive intelligence sources,
-    normalizes, deduplicates, enforces MAX_SUBDOMAINS cap, verifies DNS
-    resolution, and records internal diagnostics.
+    Enumerates subdomains using genuine passive intelligence sources:
+    - Merges and deduplicates case-insensitively
+    - Strictly normalizes and validates
+    - Excludes the apex domain
+    - Never generates synthetic www variants
+    - Caps at exactly MAX_SUBDOMAINS (50)
+    - Total equals exact displayed count
     """
     target = domain.lower().strip().rstrip('.')
-    source_map: Dict[str, List[str]] = {}
-    diagnostics: List[Dict[str, Any]] = []
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 OpenRecon/1.0"
@@ -238,81 +186,30 @@ async def enumerate_subdomains(domain: str) -> Dict[str, Any]:
         ("anubis", _fetch_anubis),
     ]
     
+    collected_raw: List[str] = []
     async with httpx.AsyncClient(verify=False, headers=headers) as client:
         tasks = [
-            _fetch_source_safe(name, func, target, client, max_retries=1)
+            _fetch_source_safe(name, func, target, client)
             for name, func in source_registry
         ]
-        
         results = await asyncio.gather(*tasks)
-        
-        for source_name, raw_candidates, err in results:
-            accepted_count = 0
-            rejected_count = 0
-            
-            for raw in raw_candidates:
-                norm = normalize_subdomain(raw, target)
-                if norm:
-                    accepted_count += 1
-                    if norm not in source_map:
-                        source_map[norm] = []
-                    source_map[norm].append(source_name)
-                else:
-                    rejected_count += 1
-            
-            diagnostics.append({
-                "source": source_name,
-                "candidates": len(raw_candidates),
-                "accepted": accepted_count,
-                "rejected": rejected_count,
-                "error": err
-            })
-        
-    all_unique_subs = sorted(list(source_map.keys()))
-    limit_reached = len(all_unique_subs) > MAX_SUBDOMAINS
-    final_subs = all_unique_subs[:MAX_SUBDOMAINS]
-    
-    # Perform concurrent DNS resolution verification (verification only; never adds/removes subdomains)
-    resolver = dns.resolver.Resolver()
-    resolver.nameservers = settings.DNS_RESOLVERS
-    resolver.timeout = 2.0
-    resolver.lifetime = 2.0
-    
-    dns_tasks = [_check_dns_resolution(sub, resolver) for sub in final_subs]
-    dns_results = await asyncio.gather(*dns_tasks, return_exceptions=True)
-    
-    cleaned_results = []
-    for i, sub in enumerate(final_subs):
-        dns_info = dns_results[i] if i < len(dns_results) and isinstance(dns_results[i], dict) else {"resolves": False, "ips": []}
-        resolves = dns_info.get("resolves", False)
-        
-        flags = []
-        context = "Public"
-        is_interesting = False
-        
-        prefix = sub.replace(f".{target}", "")
-        parts = prefix.split(".")
-        
-        for part in parts:
-            if part in SENSITIVE_KEYWORDS:
-                flags.append(SENSITIVE_KEYWORDS[part])
-                is_interesting = True
-                context = "Potentially Sensitive"
-        
-        cleaned_results.append({
-            "hostname": sub,
-            "resolves": resolves,
-            "ips": dns_info.get("ips", []),
-            "sources": sorted(list(set(source_map.get(sub, [])))),
-            "flags": flags,
-            "context": context,
-            "is_interesting": is_interesting
-        })
+        for res in results:
+            if isinstance(res, list):
+                collected_raw.extend(res)
+
+    # Normalize, validate, deduplicate
+    unique_subdomains: Set[str] = set()
+    for raw in collected_raw:
+        clean = normalize_subdomain(raw, target)
+        if clean:
+            unique_subdomains.add(clean)
+
+    # Sort alphabetically and cap at MAX_SUBDOMAINS (50)
+    sorted_subdomains = sorted(list(unique_subdomains))[:MAX_SUBDOMAINS]
+
+    subdomain_objects = [{"hostname": s} for s in sorted_subdomains]
 
     return {
-        "subdomains": cleaned_results,
-        "count": len(cleaned_results),
-        "total_discovered": len(all_unique_subs),
-        "limit_reached": limit_reached,
-        "diagnostics": diagnostics
+        "subdomains": subdomain_objects,
+        "total": len(sorted_subdomains)
     }

@@ -53,9 +53,11 @@ async def safe_request(method: str, url: str, extra_headers: Optional[Dict[str, 
     """
     Performs a secure HTTP request (GET or HEAD).
     - Validates destination IP (SSRF protection).
+    - Preserves correct TLS SNI negotiation for hosts requiring SNI.
     - Enforces size limits.
     - Enforces timeouts.
     - Handles redirects safely.
+    - Captures exact HTTP version, headers, status code, and cookies.
     """
     retries = 2
     base_delay = 0.5
@@ -63,7 +65,7 @@ async def safe_request(method: str, url: str, extra_headers: Optional[Dict[str, 
 
     for attempt in range(retries):
         try:
-            async with httpx.AsyncClient(timeout=timeout, verify=False) as client:
+            async with httpx.AsyncClient(timeout=timeout, verify=False, follow_redirects=False) as client:
                 redirects_left = MAX_REDIRECTS
                 current_url = url
                 initial_status = None
@@ -73,27 +75,15 @@ async def safe_request(method: str, url: str, extra_headers: Optional[Dict[str, 
                     if not parsed.hostname:
                         raise SafeHTTPError("Invalid URL: missing hostname")
                     
-                    # SSRF Check: Resolve and Validate IP
-                    target_ip = _resolve_and_validate(parsed.hostname)
+                    # SSRF Check: Resolve and Validate Destination IP
+                    _resolve_and_validate(parsed.hostname)
                     
                     # Prepare headers
-                    headers = {"User-Agent": USER_AGENT, "Host": parsed.hostname}
+                    headers = {"User-Agent": USER_AGENT}
                     if extra_headers:
                         headers.update(extra_headers)
-                        headers["Host"] = parsed.hostname
-                    
-                    scheme = parsed.scheme or "http"
-                    formatted_ip = f"[{target_ip}]" if ":" in target_ip else target_ip
-                    
-                    request_url = f"{scheme}://{formatted_ip}"
-                    if parsed.port:
-                        request_url += f":{parsed.port}"
-                    if parsed.path:
-                        request_url += parsed.path
-                    if parsed.query:
-                        request_url += f"?{parsed.query}"
     
-                    req = client.build_request(method, request_url, headers=headers)
+                    req = client.build_request(method, current_url, headers=headers)
                     response = await client.send(req, stream=True)
                     if initial_status is None:
                         initial_status = response.status_code
@@ -121,6 +111,7 @@ async def safe_request(method: str, url: str, extra_headers: Optional[Dict[str, 
                         if not next_location:
                             break 
                             
+                        scheme = parsed.scheme or "http"
                         if next_location.startswith("/"):
                             next_location = f"{scheme}://{parsed.hostname}{next_location}"
                         elif not next_location.startswith("http"):
@@ -133,6 +124,10 @@ async def safe_request(method: str, url: str, extra_headers: Optional[Dict[str, 
                     else:
                         content_len_hdr = response.headers.get("content-length")
                         content_len = int(content_len_hdr) if content_len_hdr and content_len_hdr.isdigit() else total_size
+                        
+                        http_ver = getattr(response, "http_version", None) or "HTTP/1.1"
+                        cookies_count = len(response.cookies)
+                        
                         return {
                             "status_code": response.status_code,
                             "initial_status": initial_status,
@@ -140,7 +135,9 @@ async def safe_request(method: str, url: str, extra_headers: Optional[Dict[str, 
                             "content_text": content_str,
                             "content_length": content_len,
                             "redirects": MAX_REDIRECTS - redirects_left,
-                            "url": current_url
+                            "url": current_url,
+                            "http_version": http_ver,
+                            "cookies_count": cookies_count
                         }
     
                 raise SafeHTTPError("Max redirects exceeded")
