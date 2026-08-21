@@ -27,9 +27,15 @@
     },
     "Adobe Analytics": {
       "category": "Analytics",
+      "cookies": [
+        "kndctr_.*_AdobeOrg_identity",
+        "cfz_adobe",
+        "s_cc",
+        "s_sq"
+      ],
       "scripts": [
-        "assets\\.adobedtm\\.com/",
-        "appmeasurement(?:[.-]([0-9.]+))?\\.js"
+        "assets\\.adobedtm\\.com",
+        "analytics\\.adobe\\.com"
       ]
     },
     "Adobe ColdFusion": {
@@ -144,21 +150,23 @@
       ]
     },
     "Angular": {
-      "category": "Frontend",
+      "category": "Framework",
       "scripts": [
-        "angular(?:[.-]([0-9.]+))?(?:\\.min)?\\.js",
+        "(?:^|/|@)angular(?:/core)?(?:@|/|[.-])([0-9]+\\.[0-9]+(?:\\.[0-9]+)?)[/-]",
+        "angular[.-]([0-9]+\\.[0-9]+(?:\\.[0-9]+)?)(?:\\.min)?\\.js",
         "@angular/core",
-        "runtime\\.js",
-        "polyfills\\.js"
+        "main\\.[a-f0-9]+\\.js"
       ],
       "html": [
-        "ng-version=\\\"([0-9.]+)\\\"",
-        "ng-app=\\\"[^\\\"]*\\\"",
-        "ng-controller=\\\"[^\\\"]*\\\""
+        "ng-version=[\\'\"]([0-9.]+)[\\'\"]",
+        "ng-app=[\\'\"][^\\'\"]*[\\'\"]",
+        "<app-root\\b",
+        "ng-controller=[\\'\"][^\\'\"]*[\\'\"]"
       ],
       "js": [
-        "ng\\.coreTokens",
-        "angular\\.version"
+        "\\bng\\.coreTokens\\b",
+        "\\bwindow\\.angular\\b",
+        "\\bangular\\.version\\b"
       ]
     },
     "Animate.css": {
@@ -263,10 +271,10 @@
     "Astro": {
       "category": "CMS",
       "meta": {
-        "generator": "^Astro(?:[ /]v?([0-9.]+))?"
+        "generator": "Astro(?:[ /]v?([0-9.]+))?"
       },
-      "html": [
-        "class=\\\"astro-[a-zA-Z0-9]+\\\""
+      "scripts": [
+        "/_astro/"
       ]
     },
     "Aurelia": {
@@ -424,11 +432,13 @@
     "Bootstrap": {
       "category": "Frontend",
       "scripts": [
-        "bootstrap(?:\\.bundle)?(?:[.-]([0-9.]+))?(?:\\.min)?\\.js",
+        "[/-]bootstrap(?:\\\\.bundle)?(?:[.-]([0-9.]+))?(?:\\\\.min)?\\\\.js(?:\\?ver=([0-9.]+))?",
+        "(?:^|/|@)bootstrap(?:@|/|[.-])([0-9]+\\.[0-9]+(?:\\.[0-9]+)?)[/-]",
         "js/bootstrap"
       ],
       "css": [
-        "bootstrap(?:[.-]([0-9.]+))?(?:\\.min)?\\.css",
+        "bootstrap(?:[.-]([0-9.]+))?(?:\\\\.min)?\\\\.css(?:\\?ver=([0-9.]+))?",
+        "(?:^|/|@)bootstrap(?:@|/|[.-])([0-9]+\\.[0-9]+(?:\\.[0-9]+)?)[/-].*\\.css",
         "css/bootstrap"
       ],
       "html": [
@@ -864,13 +874,12 @@
       ]
     },
     "Django": {
-      "category": "Backend",
+      "category": "Framework",
       "cookies": [
-        "csrftoken",
-        "django_"
+        "\\bcsrftoken\\b"
       ],
       "html": [
-        "csrfmiddlewaretoken"
+        "name=[\\'\"]csrfmiddlewaretoken[\\'\"]"
       ],
       "implies": [
         "Python"
@@ -1127,7 +1136,7 @@
     "Flask": {
       "category": "Backend",
       "cookies": [
-        "session="
+        "(?:^|;\\s*)session=[a-zA-Z0-9_.-]+"
       ],
       "headers": {
         "Server": "(?:^|\\s)Werkzeug(?:/([0-9.]+))?"
@@ -1154,11 +1163,18 @@
     "Font Awesome": {
       "category": "Frontend",
       "css": [
-        "font-awesome(?:[.-]([0-9.]+))?(?:\\.min)?\\.css",
-        "fontawesome"
+        "font-?awesome(?:/|@|-)(?:v|css/)?([0-9.]+)",
+        "font-?awesome(?:[.-]([0-9.]+))?(?:\\.[a-f0-9]+)?\\.css",
+        "fontawesome(?:/|@|-)(?:v|css/)?([0-9.]+)",
+        "fontawesome(?:[.-]([0-9.]+))?(?:\\.[a-f0-9]+)?\\.css"
       ],
       "scripts": [
-        "fontawesome(?:[.-]([0-9.]+))?(?:\\.min)?\\.js"
+        "fontawesome(?:[.-]([0-9.]+))?(?:\\\\.min)?\\\\.js",
+        "font-?awesome(?:[.-]([0-9.]+))?(?:\\\\.min)?\\\\.js"
+      ],
+      "js": [
+        "\\bFontAwesome\\b",
+        "\\b___FONT_AWESOME___\\b"
       ]
     },
     "Formik": {
@@ -1293,8 +1309,9 @@
         "googletagmanager\\.com/gtag/js"
       ],
       "html": [
-        "UA-[0-9]+-[0-9]+",
-        "G-[A-Z0-9]+"
+        "\\bUA-[0-9]{4,10}-[0-9]{1,4}\\b",
+        "[\\'\"`](G-[A-Z0-9]{8,12})[\\'\"`]",
+        "\\bgtag\\s*\\(\\s*[\\'\"`]config[\\'\"`]\\s*,\\s*[\\'\"`](G-[A-Z0-9]{8,12})[\\'\"`]"
       ]
     },
     "Google Fonts": {
@@ -1714,8 +1731,9 @@
     "jQuery": {
       "category": "Frontend",
       "scripts": [
-        "(?:^|/|@)jquery[.-]([0-9]+(?:\\.[0-9]+)+)(?:\\.min)?\\.js",
-        "(?:^|/|@)jquery(?:\\.min)?\\.js",
+        "(?:^|/|@)jquery[.-]([1-3]\\.[0-9]+(?:\\.[0-9]+)+)(?:\\.min)?\\.js",
+        "[/-]jquery(?:\\.min)?\\.js(?:\\?ver=([1-3]\\.[0-9]+(?:\\.[0-9]+)+))",
+        "(?:^|/|@)jquery[/-]([1-3]\\.[0-9]+(?:\\.[0-9]+)+)[/-]",
         "jquery-migrate(?:[.-][0-9.]+)?(?:\\.min)?\\.js",
         "code\\.jquery\\.com"
       ],
@@ -1829,16 +1847,19 @@
       }
     },
     "Laravel": {
-      "category": "Backend",
+      "category": "Framework",
       "cookies": [
-        "laravel_session",
-        "XSRF-TOKEN"
+        "\\blaravel_session\\b"
       ],
       "headers": {
-        "Set-Cookie": "laravel_session"
+        "Set-Cookie": "laravel_session="
       },
       "implies": [
         "PHP"
+      ],
+      "html": [
+        "\\bwindow\\.Laravel\\b",
+        "data-page=[\\'\"]\\{.*\"component\".*\\}[\\'\"]"
       ]
     },
     "Leaflet": {
@@ -2251,7 +2272,7 @@
       ]
     },
     "Next.js": {
-      "category": "Frontend",
+      "category": "Framework",
       "headers": {
         "X-Powered-By": "(?:^|\\s|\\b)Next\\.js(?:[ /]([0-9.]+))?"
       },
@@ -2259,8 +2280,8 @@
         "/_next/static/"
       ],
       "html": [
-        "<div id=\\\"__next\\\">",
-        "<script id=\\\"__NEXT_DATA__\\\""
+        "<div\\s+[^>]*id=[\\'\"]__next[\\'\"]",
+        "<script\\s+[^>]*id=[\\'\"]__NEXT_DATA__[\\'\"]"
       ],
       "probes": [
         {
@@ -2275,6 +2296,9 @@
       "implies": [
         "React",
         "Node.js"
+      ],
+      "js": [
+        "window\\.__NEXT_DATA__"
       ]
     },
     "NextAuth.js": {
@@ -2324,17 +2348,21 @@
       ]
     },
     "Nuxt": {
-      "category": "Frontend",
+      "category": "Framework",
       "scripts": [
         "/_nuxt/"
       ],
       "html": [
-        "<div id=\\\"__nuxt\\\">",
-        "<script>window\\.__NUXT__"
+        "<div\\s+[^>]*id=[\\'\"]__nuxt[\\'\"]",
+        "data-n-head\\b",
+        "window\\.__NUXT__"
       ],
       "implies": [
         "Vue.js",
         "Node.js"
+      ],
+      "js": [
+        "window\\.__NUXT__"
       ]
     },
     "Obsidian Publish": {
@@ -2359,8 +2387,12 @@
     "OneTrust": {
       "category": "Frontend",
       "scripts": [
-        "cdn\\.cookielaw\\.org/scripttemplates/otSDKStub\\.js",
-        "cdn\\.cookielaw\\.org/consent/"
+        "otSDKStub\\.js",
+        "onetrust\\.com/otSDKStub\\.js",
+        "cdn\\.cookielaw\\.org/scripttemplates/otSDKStub\\.js"
+      ],
+      "html": [
+        "data-domain-script="
       ]
     },
     "Open edX": {
@@ -2808,7 +2840,9 @@
     "React": {
       "category": "Frontend",
       "scripts": [
-        "react(?:-dom)?(?:\\.production)?(?:[.-]([0-9.]+))?(?:\\.min)?\\.js",
+        "(?:^|/|@)react(?:-dom)?(?:@|/|[.-])([0-9]+\\.[0-9]+(?:\\.[0-9]+)?)[/-]",
+        "react(?:-dom)?(?:[.-]([0-9]+\\.[0-9]+(?:\\.[0-9]+)?))?(?:\\.production)?(?:\\.min)?\\.js",
+        "react(?:-dom)?\\.development\\.js\\?ver=([0-9.]+)",
         "/_next/static/",
         "/static/js/[0-9a-zA-Z._-]*react"
       ],
@@ -3422,10 +3456,14 @@
     "Tailwind CSS": {
       "category": "Frontend",
       "css": [
-        "tailwind(?:[.-]([0-9.]+))?(?:\\.min)?\\.css"
+        "tailwind(?:css)?(?:[.-]([0-9.]+))?(?:\\\\.min)?\\\\.css",
+        "cdn\\\\.tailwindcss\\\\.com(?:/([0-9.]+))?"
       ],
       "html": [
         "tailwind(?:[.-]([0-9.]+))?(?:\\.min)?\\.css"
+      ],
+      "scripts": [
+        "cdn\\\\.tailwindcss\\\\.com(?:/([0-9.]+))?"
       ]
     },
     "TanStack Query": {
@@ -3733,10 +3771,11 @@
       "category": "Frontend",
       "scripts": [
         "/@vite/client",
-        "/assets/.*\\.js"
+        "vite/dist/"
       ],
       "html": [
-        "<script type=\\\"module\\\" src=\\\"/@vite/client\\\"></script>"
+        "<script\\s+[^>]*type=[\\'\"]module[\\'\"][^>]*src=[\\'\"]/@vite/client[\\'\"]",
+        "window\\.__vite_plugin_react_preamble_installed__"
       ]
     },
     "VitePress": {
@@ -3752,17 +3791,15 @@
     "Vue.js": {
       "category": "Frontend",
       "scripts": [
-        "vue(?:\\.runtime)?(?:\\.global)?(?:[.-]([0-9.]+))?(?:\\.min)?\\.js",
-        "vue-router(?:[.-]([0-9.]+))?(?:\\.min)?\\.js",
-        "/_nuxt/"
+        "(?:^|/|@)vue(?:@|/|[.-])([0-9]+\\.[0-9]+(?:\\.[0-9]+)?)[/-]",
+        "vue(?:[.-]([0-9]+\\.[0-9]+(?:\\.[0-9]+)?))?(?:\\.global|\\.runtime|\\.min)?\\.js"
       ],
       "html": [
-        "data-v-[a-f0-9]+",
-        "<div id=\\\"__nuxt\\\">"
+        "\\bdata-v-[a-f0-9]{6,10}\\b"
       ],
       "js": [
-        "__VUE__",
-        "Vue\\.config"
+        "\\bwindow\\.__VUE__\\b",
+        "Vue\\.version\\s*=\\s*[\\'\"]([0-9.]+)[\\'\"]"
       ]
     },
     "VuePress": {
@@ -4014,6 +4051,108 @@
       "category": "Frontend",
       "scripts": [
         "zustand"
+      ]
+    },
+    "jQuery Migrate": {
+      "category": "Frontend",
+      "scripts": [
+        "jquery-migrate[.-]([0-9.]+)(?:\\.min)?\\.js"
+      ]
+    },
+    "Modernizr": {
+      "category": "JavaScript Libraries",
+      "scripts": [
+        "modernizr[.-]([0-9]+(?:\\.[0-9]+)+)(?:\\.min)?\\.js",
+        "modernizr(?:\\.min)?\\.js"
+      ],
+      "js": [
+        "\\bwindow\\.Modernizr\\b"
+      ]
+    },
+    "jQuery UI": {
+      "category": "JavaScript Libraries",
+      "scripts": [
+        "jquery-ui[.-]([0-9]+(?:\\.[0-9]+)+)(?:\\.min)?\\.js",
+        "jquery-ui(?:\\.min)?\\.js"
+      ],
+      "css": [
+        "jquery-ui(?:[.-]([0-9]+(?:\\.[0-9]+)+))?(?:\\.min)?\\.css"
+      ],
+      "js": [
+        "\\bjQuery\\.ui\\b"
+      ]
+    },
+    "Isotope": {
+      "category": "JavaScript Libraries",
+      "scripts": [
+        "isotope(?:\\.pkgd)?[.-]([0-9]+(?:\\.[0-9]+)+)(?:\\.min)?\\.js",
+        "isotope(?:\\.pkgd)?(?:\\.min)?\\.js"
+      ]
+    },
+    "Masonry": {
+      "category": "JavaScript Libraries",
+      "scripts": [
+        "masonry(?:\\.pkgd)?[.-]([0-9]+(?:\\.[0-9]+)+)(?:\\.min)?\\.js",
+        "masonry(?:\\.pkgd)?(?:\\.min)?\\.js"
+      ]
+    },
+    "Magnific Popup": {
+      "category": "JavaScript Libraries",
+      "scripts": [
+        "jquery\\.magnific-popup(?:[.-]([0-9]+(?:\\.[0-9]+)+))?(?:\\.min)?\\.js"
+      ],
+      "css": [
+        "magnific-popup(?:[.-]([0-9]+(?:\\.[0-9]+)+))?(?:\\.min)?\\.css"
+      ]
+    },
+    "Counter-Up": {
+      "category": "JavaScript Libraries",
+      "scripts": [
+        "jquery\\.counterup(?:[.-]([0-9]+(?:\\.[0-9]+)+))?(?:\\.min)?\\.js"
+      ]
+    },
+    "EthicalAds": {
+      "category": "Analytics",
+      "scripts": [
+        "ethicalads(?:/client/v?([0-9.]+))?(?:/ethicalads|\\.min)?\\.js",
+        "media\\.ethicalads\\.io"
+      ]
+    },
+    "Plausible Analytics": {
+      "category": "Analytics",
+      "scripts": [
+        "script\\..*outbound-links\\.js",
+        "plausible\\.io/js/script"
+      ]
+    },
+    "Google Custom Search": {
+      "category": "Frontend",
+      "scripts": [
+        "cse\\.google\\.com/cse\\.js"
+      ]
+    },
+    "Owl Carousel": {
+      "category": "JavaScript Libraries",
+      "scripts": [
+        "owl\\.carousel(?:[.-]([0-9.]+))?(?:\\.min)?\\.js"
+      ],
+      "css": [
+        "owl\\.carousel(?:[.-]([0-9.]+))?(?:\\.min)?\\.css"
+      ]
+    },
+    "Particles.js": {
+      "category": "JavaScript Libraries",
+      "scripts": [
+        "particles(?:[.-]([0-9.]+))?(?:\\.min)?\\.js"
+      ],
+      "js": [
+        "\\bparticlesJS\\b"
+      ]
+    },
+    "jCarousel": {
+      "category": "JavaScript Libraries",
+      "scripts": [
+        "jcarousel(?:[.-]([0-9.]+))?(?:\\.min)?\\.js"
       ]
     }
   }

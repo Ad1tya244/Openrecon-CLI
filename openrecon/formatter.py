@@ -38,26 +38,33 @@ def _colorize_status(status_word: str) -> str:
         return f"[dim]{status_word}[/dim]"
     return status_word
 
-def _print_kv(key: str, value: Any, indent: int = 4, key_width: int = 28, max_width: int = 90):
+def _print_kv(key: str, value: Any, indent: int = 4, key_width: int = 28, max_width: Optional[int] = None):
     if value is None or value == "":
         return
     value_str = str(value)
+    width = max_width or (console.width if (console and getattr(console, "width", None)) else 90)
     prefix = " " * indent + f"{key:<{key_width}} "
     sub_indent = " " * (indent + key_width + 1)
-    avail_width = max(35, max_width - len(sub_indent))
+    
+    prefix_len = len(prefix)
+    sub_indent_len = len(sub_indent)
+    
+    first_avail = max(30, width - prefix_len)
+    next_avail = max(30, width - sub_indent_len)
 
-    if len(prefix) + len(value_str) <= max_width and "\n" not in value_str:
+    if prefix_len + len(value_str) <= width and chr(10) not in value_str:
         console.print(f"{prefix}{value_str}")
         return
 
-    if ", " in value_str and "\n" not in value_str:
+    if ", " in value_str and chr(10) not in value_str:
         parts = [p.strip() for p in value_str.split(", ") if p.strip()]
         lines = []
         current_line = []
         current_len = 0
         for part in parts:
+            current_avail = first_avail if not lines else next_avail
             item_len = len(part) + (2 if current_line else 0)
-            if current_line and (current_len + item_len > avail_width):
+            if current_line and (current_len + item_len > current_avail):
                 lines.append(", ".join(current_line) + ",")
                 current_line = [part]
                 current_len = len(part)
@@ -74,7 +81,7 @@ def _print_kv(key: str, value: Any, indent: int = 4, key_width: int = 28, max_wi
                 console.print(f"{sub_indent}{line}")
         return
 
-    wrapped = textwrap.wrap(value_str, width=avail_width)
+    wrapped = textwrap.wrap(value_str, width=next_avail)
     if not wrapped:
         console.print(f"{prefix}{value_str}")
         return
@@ -83,7 +90,6 @@ def _print_kv(key: str, value: Any, indent: int = 4, key_width: int = 28, max_wi
             console.print(f"{prefix}{line}")
         else:
             console.print(f"{sub_indent}{line}")
-
 ABSENT_DNS_MESSAGES = {
     "A": "No A records",
     "AAAA": "No AAAA records",
@@ -276,7 +282,7 @@ def render_headers(data: Dict[str, Any]):
         _print_kv("ETag", str(data["etag"]), indent=4, key_width=16)
 
 # 6. Security Headers
-def render_security_headers(data: Dict[str, Any]):
+def render_security_headers(data: Dict[str, Any], show_evidence: bool = False):
     if not data or "error" in data:
         console.print(f"[bold cyan][+][/bold cyan] [bold]Security Headers[/bold]\n    [red]Error: {data.get('error', 'Unreachable')}[/red]")
         return
@@ -285,9 +291,15 @@ def render_security_headers(data: Dict[str, Any]):
     headers_dict = data.get("headers", {})
     
     for h_name, h_info in headers_dict.items():
-        val = h_info.get("value", "MISSING")
-        colorized_val = _colorize_status(val) if val == "MISSING" else val
+        present = h_info.get("present", False)
+        status_word = "PRESENT" if present else "MISSING"
+        colorized_val = _colorize_status(status_word)
         _print_kv(h_name, colorized_val, indent=4, key_width=28)
+        
+        if show_evidence and present:
+            raw_val = h_info.get("value")
+            if raw_val and raw_val != "MISSING":
+                _print_kv("└─ Value:", raw_val, indent=6, key_width=9)
 
 # 7. Subdomains
 def render_subdomains(data: Dict[str, Any]):
@@ -306,47 +318,128 @@ def render_subdomains(data: Dict[str, Any]):
             console.print(f"    {host}")
 
 # 8. Technology Stack
-def render_tech(data: Dict[str, Any]):
+def render_tech(data: Dict[str, Any], show_evidence: bool = False):
     if not data or "error" in data:
         console.print(f"[bold cyan][+][/bold cyan] [bold]Technology Stack[/bold]\n    [red]Error: {data.get('error', 'Unreachable')}[/red]")
         return
 
     console.print("[bold cyan][+][/bold cyan] [bold]Technology Stack[/bold]")
-    categories = data.get("categories", {})
     
-    preferred_order = [
-        "Web Server", "Backend", "Frontend", "CMS", "Framework",
-        "Runtime", "Analytics", "JavaScript Libraries", "CDN / Proxy"
-    ]
-    
-    has_output = False
-    for cat in preferred_order:
-        items = categories.get(cat, [])
-        if not items:
-            continue
-        formatted_items = []
-        for item in items:
-            name = item.get("name", "")
-            ver = item.get("version")
-            display_name = f"{name} {ver}" if ver else name
-            if display_name:
-                formatted_items.append(display_name)
-        if formatted_items:
-            combined_val = ", ".join(formatted_items)
-            _print_kv(cat, combined_val, indent=4, key_width=20)
-            has_output = True
-
-    for cat, items in categories.items():
-        if cat not in preferred_order and items:
-            formatted_items = [f"{i.get('name')} {i.get('version')}".strip() for i in items if i.get("name")]
+    if not show_evidence:
+        categories = data.get("categories", {})
+        preferred_order = [
+            "Web Server", "Backend", "Frontend frameworks/libraries",
+            "JavaScript Libraries", "CMS", "Analytics", "CDN / Proxy",
+            "Security / Infrastructure", "Web standards / metadata"
+        ]
+        category_mappings = {
+            "Frontend frameworks/libraries": "Frontend",
+            "JavaScript Libraries": "JavaScript",
+            "Security / Infrastructure": "Security",
+            "Web standards / metadata": "Web standards"
+        }
+        has_output = False
+        for cat in preferred_order:
+            items = categories.get(cat, [])
+            if not items:
+                continue
+            formatted_items = []
+            for item in items:
+                name = item.get("name", "")
+                ver = getattr(item, "version", None) or (item.get("version") if isinstance(item, dict) else None)
+                display_name = f"{name} {ver}" if ver else name
+                if display_name:
+                    formatted_items.append(display_name)
             if formatted_items:
-                _print_kv(cat, ", ".join(formatted_items), indent=4, key_width=20)
+                combined_val = ", ".join(formatted_items)
+                display_cat = category_mappings.get(cat, cat)
+                _print_kv(display_cat, combined_val, indent=4, key_width=16)
                 has_output = True
 
-    if not has_output:
-        console.print("    No technologies identified.")
+        for cat, items in categories.items():
+            if cat not in preferred_order and items:
+                formatted_items = [f"{i.get('name')} {i.get('version')}".strip() for i in items if i.get("name")]
+                if formatted_items:
+                    display_cat = category_mappings.get(cat, cat)
+                    _print_kv(display_cat, ", ".join(formatted_items), indent=4, key_width=16)
+                    has_output = True
 
-# 9. Open Ports
+        if not has_output:
+            console.print("    No technologies identified.")
+        return
+
+    # Evidence verbose mode
+    findings = data.get("findings", [])
+    if not findings:
+        console.print("    No technologies identified.")
+        return
+
+    # Group findings by category
+    categories_dict = {}
+    for f in findings:
+        cat = getattr(f, "category", None) or (f.get("category") if isinstance(f, dict) else None) or "Other"
+        if cat not in categories_dict:
+            categories_dict[cat] = []
+        categories_dict[cat].append(f)
+
+    preferred_order = [
+        "Web Server", "Backend", "Frontend frameworks/libraries",
+        "JavaScript Libraries", "CMS", "Analytics", "CDN / Proxy",
+        "Security / Infrastructure", "Web standards / metadata"
+    ]
+
+    all_cats = preferred_order + [c for c in categories_dict.keys() if c not in preferred_order]
+    
+    first = True
+    for cat in all_cats:
+        items = categories_dict.get(cat, [])
+        if not items:
+            continue
+        
+        for item in items:
+            if not first:
+                console.print("")
+            first = False
+            
+            ver = getattr(item, "version", None) or (item.get("version") if isinstance(item, dict) else None)
+            val = getattr(item, 'value', None) or (item.get('value') if isinstance(item, dict) else None)
+            display_name = f"{val} {ver}" if ver else val
+            console.print(f"    {display_name}")
+            
+            ev_list = getattr(item, "evidence", []) or (item.get("evidence", []) if isinstance(item, dict) else [])
+            for ev in ev_list:
+                ev_type = getattr(ev, "type", None) or ev.get("type", "unknown")
+                ev_src = getattr(ev, "source", None) or (ev.get("source") if isinstance(ev, dict) else None) or ""
+                ev_snip = getattr(ev, "snippet", None) or (ev.get("snippet") if isinstance(ev, dict) else None) or ""
+                
+                label = ev_type.capitalize()
+                if ev_type == "headers":
+                    label = "Header"
+                elif ev_type == "cookies":
+                    label = "Cookie"
+                elif ev_type == "meta":
+                    label = "Meta"
+                elif ev_type == "url":
+                    label = "URL"
+                elif ev_type == "html":
+                    label = "HTML"
+                elif ev_type == "dns":
+                    label = "DNS"
+                elif label == "Scriptsrc":
+                    label = "Script"
+                elif label == "Css":
+                    label = "Stylesheet"
+                elif label == "Relational":
+                    label = "Relation"
+                
+                val = ev_snip
+                if ev_type == "relational":
+                    val = f"Implied by {ev_src}"
+                elif ev_src and ev_src != val and label not in ("Fallback", "Relation"):
+                    val = f"{ev_src}: {val}"
+                
+                console.print(f"      └─ {label}: {val}")
+
 def render_ports(data: Dict[str, Any]):
     if not data or "error" in data:
         console.print(f"[bold cyan][+][/bold cyan] [bold]Open Ports[/bold]\n    [red]Error: {data.get('error', 'Scan failed')}[/red]")
@@ -428,6 +521,203 @@ def render_directories(data: Dict[str, Any]):
     else:
         console.print("    No exposed directories found.")
 
+# 13. Page & Client-Side Intelligence
+def render_page_intel(data: Dict[str, Any], show_evidence: bool = False):
+    if data is None or (isinstance(data, dict) and "error" in data):
+        err = data.get("error", "Lookup failed") if isinstance(data, dict) else "Lookup failed"
+        console.print(f"[bold cyan][+][/bold cyan] [bold]Page Intelligence[/bold]\n    [red]Error: {err}[/red]")
+        return
+
+    if not show_evidence:
+        console.print("[bold cyan][+][/bold cyan] [bold]Page Intelligence[/bold]")
+        has_findings = False
+
+        # 1. API Endpoints
+        api_refs = data.get("api_references", [])
+        if api_refs:
+            for idx, ref in enumerate(api_refs):
+                k = "API Endpoint" if idx == 0 else ""
+                if isinstance(ref, dict):
+                    disp = ref.get("display") or f"{ref.get('method', 'GET')} {ref.get('url', '/')}"
+                    params = ref.get("params", [])
+                    if params:
+                        disp = f"{disp} ({', '.join(params)})"
+                    _print_kv(k, disp, indent=4, key_width=18)
+                else:
+                    _print_kv(k, str(ref), indent=4, key_width=18)
+                has_findings = True
+
+        # 1b. GraphQL Operations
+        graphql_ops = data.get("graphql_operations", [])
+        if graphql_ops:
+            for idx, op in enumerate(graphql_ops):
+                k = "GraphQL Operation" if idx == 0 else ""
+                disp = op.get("display") if isinstance(op, dict) else str(op)
+                _print_kv(k, disp, indent=4, key_width=18)
+                has_findings = True
+
+        # 2. Functional Forms
+        forms = data.get("forms", [])
+        if forms:
+            for idx, f in enumerate(forms):
+                k = "Functional Form" if idx == 0 else ""
+                if isinstance(f, dict):
+                    method = f.get("method", "POST")
+                    action = f.get("action", "/")
+                    fields = f.get("fields", [])
+                    fields_str = f" ({', '.join(fields)})" if fields else ""
+                    _print_kv(k, f"{method} {action}{fields_str}", indent=4, key_width=18)
+                else:
+                    _print_kv(k, str(f), indent=4, key_width=18)
+                has_findings = True
+
+        # 3. Application Routes
+        app_paths = data.get("application_paths", [])
+        if app_paths:
+            for idx, path in enumerate(app_paths):
+                k = "Application Route" if idx == 0 else ""
+                _print_kv(k, str(path), indent=4, key_width=18)
+                has_findings = True
+
+        # 4-7. Client Config
+        client_config = data.get("client_config", {})
+        if client_config.get("api_base"):
+            _print_kv("API Base", str(client_config["api_base"]), indent=4, key_width=18)
+            has_findings = True
+        if client_config.get("backend_url"):
+            _print_kv("Backend URL", str(client_config["backend_url"]), indent=4, key_width=18)
+            has_findings = True
+        if client_config.get("environment"):
+            _print_kv("Environment", str(client_config["environment"]), indent=4, key_width=18)
+            has_findings = True
+        if client_config.get("base_path"):
+            _print_kv("Base Path", str(client_config["base_path"]), indent=4, key_width=18)
+            has_findings = True
+
+        # 7b. OAuth & Identity Configurations
+        oauth_configs = data.get("oauth_configurations", [])
+        if oauth_configs:
+            for idx, cfg in enumerate(oauth_configs):
+                k = "OAuth Configuration" if idx == 0 else ""
+                disp = cfg.get("display") if isinstance(cfg, dict) else str(cfg)
+                _print_kv(k, disp, indent=4, key_width=18)
+                has_findings = True
+
+        # 8. WebSockets
+        websockets = data.get("websockets", [])
+        if websockets:
+            for idx, ws in enumerate(websockets):
+                k = "WebSocket" if idx == 0 else ""
+                _print_kv(k, str(ws), indent=4, key_width=18)
+                has_findings = True
+
+        # 9. Internal Hosts
+        internal_hosts = data.get("internal_hosts", [])
+        if internal_hosts:
+            for idx, host in enumerate(internal_hosts):
+                k = "Internal Host" if idx == 0 else ""
+                _print_kv(k, str(host), indent=4, key_width=18)
+                has_findings = True
+
+        # 10. Cloud Storage
+        cloud_storage = data.get("cloud_storage", [])
+        if cloud_storage:
+            for idx, cs in enumerate(cloud_storage):
+                k = "Cloud Storage" if idx == 0 else ""
+                _print_kv(k, str(cs), indent=4, key_width=18)
+                has_findings = True
+
+        # 11. Config References
+        configs = data.get("config_references", [])
+        if configs:
+            for idx, cfg in enumerate(configs):
+                k = "Config Reference" if idx == 0 else ""
+                _print_kv(k, str(cfg), indent=4, key_width=18)
+                has_findings = True
+        elif data.get("config"):
+            _print_kv("Config Reference", str(data["config"]), indent=4, key_width=18)
+            has_findings = True
+
+        # 12. API Specifications
+        api_specs = data.get("api_specifications", [])
+        if api_specs:
+            for idx, spec in enumerate(api_specs):
+                k = "API Specification" if idx == 0 else ""
+                _print_kv(k, str(spec), indent=4, key_width=18)
+                has_findings = True
+
+        # 13. Debug Endpoints
+        debug_eps = data.get("debug_endpoints", [])
+        if debug_eps:
+            for idx, dbg in enumerate(debug_eps):
+                k = "Debug Endpoint" if idx == 0 else ""
+                _print_kv(k, str(dbg), indent=4, key_width=18)
+                has_findings = True
+
+        # 14. Source Maps
+        source_maps = data.get("source_maps", [])
+        if source_maps:
+            for idx, sm in enumerate(source_maps):
+                k = "Source Map" if idx == 0 else ""
+                _print_kv(k, str(sm), indent=4, key_width=18)
+                has_findings = True
+
+        # 15. Sensitive References
+        sensitive = data.get("sensitive_references", [])
+        if sensitive:
+            for idx, s in enumerate(sensitive):
+                k = "Exposed Token" if idx == 0 else ""
+                _print_kv(k, str(s), indent=4, key_width=18)
+                has_findings = True
+
+        if not has_findings:
+            console.print("    No significant page intelligence found.")
+        return
+
+    # Evidence verbose mode
+    console.print("[bold cyan][+][/bold cyan] [bold]Page Intelligence[/bold]")
+    findings = data.get("findings", [])
+    if not findings:
+        console.print("    No significant page intelligence found.")
+        return
+
+    first = True
+    for f in findings:
+        if not first:
+            console.print("")
+        first = False
+        
+        cat = getattr(f, "category", None) or (f.get("category") if isinstance(f, dict) else None) or "Other"
+        val = getattr(f, "value", None) or (f.get("value") if isinstance(f, dict) else None) or ""
+        console.print(f"    {cat} {val}")
+        
+        ev_list = getattr(f, "evidence", []) or (f.get("evidence", []) if isinstance(f, dict) else [])
+        for ev in ev_list:
+            ev_type = getattr(ev, "type", None) or (ev.get("type") if isinstance(ev, dict) else "unknown")
+            ev_snip = getattr(ev, "snippet", None) or (ev.get("snippet") if isinstance(ev, dict) else "")
+            
+            # Capitalize type
+            label = ev_type.capitalize()
+            if label == "Javascript":
+                label = "JavaScript"
+            console.print(f"      └─ {label}: {ev_snip}")
+            
+        # For API Endpoints, print classification Type
+        if cat == "API Endpoint":
+            api_type = "REST/XHR"
+            for api_ref in data.get("api_references", []):
+                disp_val = api_ref.get("display") or f"{api_ref.get('method', 'GET')} {api_ref.get('url', '/')}"
+                params = api_ref.get("params", [])
+                if params:
+                    disp_val = f"{disp_val} ({', '.join(params)})"
+                if disp_val == val:
+                    api_type = api_ref.get("class", "xhr").upper()
+                    if api_type == "XHR":
+                        api_type = "REST/XHR"
+                    break
+            console.print(f"      └─ Type: {api_type}")
+
+
 RENDER_MAP = {
     "dns": render_dns,
     "whois": render_whois,
@@ -437,6 +727,7 @@ RENDER_MAP = {
     "security-headers": render_security_headers,
     "subdomains": render_subdomains,
     "tech": render_tech,
+    "page-intel": render_page_intel,
     "ports": render_ports,
     "ip": render_ip_asn,
     "public-files": render_public_files,
@@ -446,17 +737,24 @@ RENDER_MAP = {
 def render_results(
     results: Dict[str, Any],
     elapsed_seconds: Optional[float] = None,
-    module_count: Optional[int] = None
+    module_count: Optional[int] = None,
+    show_evidence: bool = False
 ):
     target = results.get("target", "Target")
     modules = results.get("modules", {})
     
     print_scan_header(target)
 
+    import inspect
     for mod_key, mod_result in modules.items():
         data = mod_result.get("data", {}) if isinstance(mod_result, dict) else mod_result
         if mod_key in RENDER_MAP:
-            RENDER_MAP[mod_key](data)
+            func = RENDER_MAP[mod_key]
+            sig = inspect.signature(func)
+            if "show_evidence" in sig.parameters:
+                func(data, show_evidence=show_evidence)
+            else:
+                func(data)
         else:
             console.print(f"[bold cyan][+][/bold cyan] [bold]{mod_key}[/bold]")
             console.print(f"    {data}")
@@ -479,7 +777,8 @@ def export_json(results: Dict[str, Any], indent: int = 2) -> str:
 def export_text_report(
     results: Dict[str, Any],
     elapsed_seconds: Optional[float] = None,
-    module_count: Optional[int] = None
+    module_count: Optional[int] = None,
+    show_evidence: bool = False
 ) -> str:
     str_buf = io.StringIO()
     text_console = Console(file=str_buf, force_terminal=False, no_color=True, highlight=False)
@@ -488,7 +787,7 @@ def export_text_report(
     orig_console = console
     console = text_console
     try:
-        render_results(results, elapsed_seconds=elapsed_seconds, module_count=module_count)
+        render_results(results, elapsed_seconds=elapsed_seconds, module_count=module_count, show_evidence=show_evidence)
     finally:
         console = orig_console
 

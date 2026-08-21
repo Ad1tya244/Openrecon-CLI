@@ -122,6 +122,7 @@ Examples:
     parser.add_argument("-t", "--timeout", type=float, default=settings.MODULE_TIMEOUT, help=f"Timeout per module in seconds (default: {timeout_default}s)")
     parser.add_argument("--check-update", action="store_true", help="Check for available updates and exit")
     parser.add_argument("--no-update", action="store_true", help="Skip automatic update check for this invocation")
+    parser.add_argument("-e", "--evidence", action="store_true", help="Show structured provenance and evidence matching trace")
 
     return parser
 
@@ -129,7 +130,8 @@ async def execute_scan(
     target: str,
     module_filter: Optional[str],
     output_file: Optional[str],
-    timeout: float
+    timeout: float,
+    show_evidence: bool = False
 ) -> int:
     # 1. Validate Target
     val_res = validate_target(target)
@@ -165,13 +167,13 @@ async def execute_scan(
     elapsed = time.perf_counter() - start_time
 
     # 5. Render Formatted Output to Terminal
-    render_results(results, elapsed_seconds=elapsed, module_count=len(selected_modules))
+    render_results(results, elapsed_seconds=elapsed, module_count=len(selected_modules), show_evidence=show_evidence)
 
     # 6. Save to File if requested (-o)
     if output_file:
         try:
             with open(output_file, "w", encoding="utf-8") as f:
-                f.write(export_text_report(results, elapsed_seconds=elapsed, module_count=len(selected_modules)))
+                f.write(export_text_report(results, elapsed_seconds=elapsed, module_count=len(selected_modules), show_evidence=show_evidence))
             console.print(f"[bold green]✔ Results saved to:[/bold green] [white]{output_file}[/white]")
         except Exception as e:
             err_console.print(f"[bold red]✖ Failed to save results to '{output_file}':[/bold red] {e}")
@@ -222,11 +224,12 @@ def main(args_list: Optional[List[str]] = None):
         if args.target:
             ret = asyncio.run(
                 execute_scan(
-                    target=args.target,
-                    module_filter=args.module,
-                    output_file=args.output,
-                    timeout=args.timeout
-                )
+                target=args.target,
+                module_filter=args.module,
+                output_file=args.output,
+                timeout=args.timeout,
+                show_evidence=args.evidence
+            )
             )
             sys.exit(ret)
 

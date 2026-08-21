@@ -94,6 +94,25 @@ class ScanEngine:
             elif isinstance(item, Exception):
                 logger.error(f"Unexpected error in module runner: {item}")
 
+        # Cross-module evidence sharing: Enrich technology stack with evidence from page-intel & other modules
+        if "tech" in results["modules"]:
+            tech_res = results["modules"]["tech"]
+            if isinstance(tech_res, dict) and "data" in tech_res and isinstance(tech_res["data"], dict) and "error" not in tech_res["data"]:
+                collected_evidence = []
+                for mod_k, mod_v in results["modules"].items():
+                    if mod_k == "tech":
+                        continue
+                    m_data = mod_v.get("data", {}) if isinstance(mod_v, dict) else {}
+                    if isinstance(m_data, dict) and "technology_evidence" in m_data:
+                        collected_evidence.extend(m_data["technology_evidence"])
+
+                if collected_evidence:
+                    try:
+                        from openrecon.modules.tech_fingerprint import merge_technology_evidence
+                        tech_res["data"] = merge_technology_evidence(tech_res["data"], collected_evidence)
+                    except Exception as e:
+                        logger.error(f"Failed to merge technology evidence: {e}")
+
         return results
 
     async def run_all(

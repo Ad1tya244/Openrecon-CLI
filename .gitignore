@@ -57,3 +57,13 @@ Thumbs.db
 # Package Data & Assets Allowlist
 !openrecon/data/*.json
 !assets/*
+
+# Folders
+*atana-dev/
+*ppalyzer-main/
+
+# Agent file
+AGENTS.md
+
+# Node.js dependencies
+node_modules/

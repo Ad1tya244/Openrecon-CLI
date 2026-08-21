@@ -86,5 +86,12 @@ MODULE_REGISTRY = {
         "module": "openrecon.modules.directory_exposure",
         "func": "check_directory_exposure",
         "async": True
+    },
+    "page-intel": {
+        "name": "Page & Client-Side Intelligence",
+        "description": "Inspect HTML metadata, forms, scripts, API routes, libraries, and source maps",
+        "module": "openrecon.modules.page_intel",
+        "func": "analyze_page_intel",
+        "async": True
     }
 }

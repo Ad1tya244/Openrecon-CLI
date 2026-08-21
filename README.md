@@ -27,6 +27,7 @@ It performs high-precision, evidence-based reconnaissance against target domains
 ## 🚀 Key Features
 
 *   **🌐 Comprehensive DNS Intelligence**: Resolves 10 standard and extended DNS record types (`A`, `AAAA`, `CNAME`, `MX` with priority/null MX, `NS`, `SOA` with structured fields, complete un-truncated `TXT`, `CAA` with flags/tag/value, `SRV` for defined common services, and `PTR` reverse DNS for resolved IPs) with TTLs.
+*   **📄 Page & Client-Side Intelligence (`page-intel`)**: Inspects root HTML page metadata (`<title>`, description, canonical, language, generator), analyzes forms (actions, methods, inputs, file-upload fields), extracts deterministic API endpoints (`/api/...`, `/graphql`, `/rest/...`, `/auth/...`, `/oauth/...`), application routes (`/login`, `/dashboard`, `/upload`), verifies public source-map accessibility & metadata, identifies JavaScript libraries/versions, discovers resource references (`manifest.json`, config files), and extracts meaningful source comments without executing code or crawling.
 *   **🛡️ Multi-Source Passive Subdomain Discovery**: Aggregates genuine subdomains across Certificate Transparency logs and passive intelligence feeds (`crt.sh`, `certspotter`, `urlscan`, `hackertarget`, `wayback`, `rapiddns`, `anubis`) with case-insensitive deduplication, apex exclusion, zero synthetic `www.` generation, and a 50-item hard cap.
 *   **✉️ Authoritative Email Security Posture**: Evaluates single-record `SPF` with strict qualifier semantics (`-all` → `STRICT`, `~all` → `SOFTFAIL`, `?all` → `NEUTRAL`, `+all` → `OVER-PERMISSIVE`, `redirect=` → `REDIRECT`) and RFC 7208 multiple-SPF invalidation; parses `DMARC` policies (`reject`, `quarantine`, `none`), subdomain policies, rua/ruf, and percentage; reports `DKIM` presence without brute-forcing.
 *   **🔒 SSL/TLS Certificate Analysis**: Inspects certificate validity, Certificate Version (e.g. `v3`), Key Type (RSA, EC, Ed25519), Key Size (bits), Certificate Chain Status (`VERIFIED`, `SELF-SIGNED`, `UNTRUSTED`), RFC 6125 SAN hostname validation, handshake cipher suites, and TLS protocol version.
@@ -66,17 +67,17 @@ After installation, the `openrecon` command is available directly in your termin
 ## ⚡ Usage
 
 ```bash
-# 1. Full reconnaissance scan (runs all 12 modules concurrently)
+# 1. Full reconnaissance scan (runs all 13 modules concurrently)
 openrecon example.com
 
 # 2. Targeted module scan (-m / --modules)
-openrecon example.com -m dns,ssl,tech
+openrecon example.com -m dns,ssl,tech,page-intel
+openrecon example.com -m page-intel,headers,security-headers
 openrecon example.com -m dns,email,whois
-openrecon example.com -m headers,security-headers,directories
 
 # 3. Export scan results to a text file (-o / --output, .txt only)
 openrecon example.com -o results.txt
-openrecon example.com -m tech,dns -o report.txt
+openrecon example.com -m page-intel,tech,dns -o report.txt
 
 # 4. Custom module timeout in seconds (-t / --timeout, default: 60s)
 openrecon example.com -t 120
@@ -110,12 +111,13 @@ openrecon --help
 | `ip` | Infrastructure Intelligence | IPv4, IPv6, Additional IPs, Geolocation, ISP, ASN, Provider, Hosting Type |
 | `public-files` | Public Files | Checks HTTP 200 status for `robots.txt`, `sitemap.xml`, `security.txt`, `humans.txt`, etc. |
 | `directories` | Directory Exposure | Verifies confirmed open directory listing indexing signatures (`200 EXPOSED`) |
+| `page-intel` | Page & Client-Side Intelligence | Inspects HTML metadata, forms, scripts, API routes, libraries, and source maps |
 
 ---
 
 ## 🧪 Running Tests
 
-OpenRecon includes a comprehensive automated test suite covering all 12 modules, version tracking, CLI options, updater diagnostics, cross-module consistency, and regression checks:
+OpenRecon includes a comprehensive automated test suite covering all 13 modules, version tracking, CLI options, updater diagnostics, cross-module consistency, and regression checks:
 
 ```bash
 venv/bin/python -m unittest discover tests
