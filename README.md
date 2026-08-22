@@ -39,7 +39,9 @@ It performs high-precision, evidence-based reconnaissance against target domains
 *   **🌍 Infrastructure & IP Intelligence**: Resolves Primary IPv4, IPv6, Additional IPs, Geolocation, ISP, Autonomous System Number (ASN), Provider, and Cloud/CDN Hosting categorization.
 *   **📋 Domain Registration Details**: Extracts Registrar, Registry Domain ID, Registrar IANA ID, Creation/Updated/Expiration dates, domain age, and EPP status codes while filtering privacy placeholders.
 *   **✨ Unified Aligned Key-Value CLI**: Clean terminal formatting with TrueColor ANSI gradient banner, 4-space indentation, consistent key widths, and transparent background support.
-*   **💾 Formatted Text Report Export**: Direct export of structured scan results to `.txt` files (`-o / --output`).
+*   **💾 Formatted Text & JSON Report Export**: Direct export of structured scan results to `.txt` or `.json` files (`-o / --output`).
+*   **✉️ Email Enumeration (`email-enum`)**: Discovers and normalizes publicly available email addresses associated with the target domain.
+*   **👥 Social Media OSINT & Verification (`social`)**: Passive discovery of social media profiles, classified using an evaluation layer into official and personal accounts.
 *   **🔄 Confirmed Opt-In GitHub Updater**: Check and install official GitHub releases or tags on demand (`openrecon --check-update`) with zero startup latency for normal scans.
 
 ---
@@ -75,7 +77,8 @@ openrecon example.com -m dns,ssl,tech,page-intel
 openrecon example.com -m page-intel,headers,security-headers
 openrecon example.com -m dns,email,whois
 
-# 3. Export scan results to a text file (-o / --output, .txt only)
+# 3. Export scan results to a text or JSON file (-o / --output, .txt or .json)
+openrecon example.com -o results.json
 openrecon example.com -o results.txt
 openrecon example.com -m page-intel,tech,dns -o report.txt
 
@@ -99,6 +102,8 @@ openrecon --help
 
 | Module Identifier (`-m`) | Module Name | Primary Reconnaissance Signals |
 | :--- | :--- | :--- |
+| `email-enum` | Email Enumeration | Discovers publicly available email addresses associated with the target domain |
+| `social` | Social Media OSINT | Discovers publicly available social-media profiles with verification classification |
 | `dns` | DNS Recon | Standard & extended records (`A`, `AAAA`, `CNAME`, `MX`, `NS`, `SOA`, `TXT`, `CAA`, `SRV`, `PTR`) with TTLs |
 | `whois` | Domain Registration | Registrar, Registry ID, Registrar ID, Creation/Updated/Expiration dates, Age, Status |
 | `ssl` | SSL / TLS Analysis | Certificate validity, Version, Key Type/Size, Chain Status, SANs, Cipher, TLS protocol |

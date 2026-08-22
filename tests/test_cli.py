@@ -138,7 +138,7 @@ class TestCLIParser(unittest.TestCase):
         help_output = self.parser.format_help()
         lines = [line for line in help_output.splitlines() if "--output" in line]
         self.assertEqual(len(lines), 1, "Expected single line containing --output option")
-        self.assertIn("Save scan results to a text file (.txt only)", lines[0])
+        self.assertIn("Save scan results to a .txt or .json file", lines[0])
 
     def test_txt_output_accepted(self):
         """Verify .txt output filenames are accepted."""
@@ -150,9 +150,9 @@ class TestCLIParser(unittest.TestCase):
         self.assertTrue(is_valid)
 
     def test_json_and_non_txt_output_rejected(self):
-        """Verify .json and other non-.txt filenames are rejected."""
+        """Verify .json is accepted and non-supported filenames are rejected."""
         is_valid, ext = validate_output_path("results.json")
-        self.assertFalse(is_valid)
+        self.assertTrue(is_valid)
         self.assertEqual(ext, ".json")
 
         is_valid, ext = validate_output_path("results.csv")
@@ -164,16 +164,16 @@ class TestCLIParser(unittest.TestCase):
 
         # Test error printing
         with io.StringIO() as buf, patch("sys.stderr", buf):
-            print_unsupported_output_error(".json")
+            print_unsupported_output_error(".csv")
             err_output = buf.getvalue()
-            self.assertIn("Unsupported output format: .json", err_output)
-            self.assertIn("OpenRecon supports only .txt output files.", err_output)
+            self.assertIn("Unsupported output format: .csv", err_output)
+            self.assertIn("OpenRecon supports only .txt or .json output files.", err_output)
 
-    def test_help_does_not_advertise_json(self):
-        """Verify --help only advertises .txt and does not mention .json."""
+    def test_help_advertises_json(self):
+        """Verify --help advertises both .txt and .json."""
         help_output = self.parser.format_help()
-        self.assertIn("Save scan results to a text file (.txt only)", help_output)
-        self.assertNotIn(".json", help_output)
+        self.assertIn("Save scan results to a .txt or .json file", help_output)
+        self.assertIn(".json", help_output)
 
     def test_txt_output_formatting_unchanged(self):
         """Verify text report exporter produces valid formatted output."""

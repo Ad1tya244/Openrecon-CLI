@@ -3,10 +3,22 @@ import io
 import textwrap
 from typing import Dict, Any, List, Optional
 from rich.console import Console
+from rich.theme import Theme
+
+custom_theme = Theme({
+    "custom_cyan": "#02d1b5",
+    "bold_custom_cyan": "bold #02d1b5",
+    "custom_green": "#58ad03",
+    "bold_custom_green": "bold #58ad03",
+    "custom_red": "#de2302",
+    "bold_custom_red": "bold #de2302",
+    "custom_yellow": "#dec402",
+    "bold_custom_yellow": "bold #dec402"
+})
 from openrecon import __version__
 
-console = Console(highlight=False)
-err_console = Console(stderr=True, highlight=False)
+console = Console(theme=custom_theme, highlight=False)
+err_console = Console(stderr=True, theme=custom_theme, highlight=False)
 
 BANNER_ART = """[0;38;2;140;255;255;49m [0;38;2;140;255;255;48;2;0;180;185m▓▒░   [0;38;2;75;75;75;49m▄[0;38;2;0;180;185;49m [0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m▓▒░   [0;38;2;75;75;75;49m▄[0;38;2;0;180;185;49m [0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m▓▒░    [0;38;2;75;75;75;49m▄[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m▓▒░[0;38;2;75;75;75;49m▄[0;38;2;140;255;255;49m   [0;38;2;140;255;255;48;2;0;180;185m▓▒[0;38;2;75;75;75;49m▄[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m▓▒░   [0;38;2;75;75;75;49m▄[0;38;2;0;180;185;49m [0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m▓▒░    [0;38;2;75;75;75;49m▄[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;140;255;255;48;2;0;180;185m▓▒░   [0;38;2;75;75;75;49m▄[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;140;255;255;48;2;0;180;185m▓▒░   [0;38;2;75;75;75;49m▄[0;38;2;0;180;185;49m [0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m▓▒░[0;38;2;75;75;75;49m▄[0;38;2;140;255;255;49m   [0;38;2;140;255;255;48;2;0;180;185m▓▒[0;38;2;75;75;75;49m▄[0m
 [0;38;2;140;255;255;48;2;0;180;185m▓▒[0;38;2;75;75;75;49m█▀▀▀[0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m▄[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m▒░[0;38;2;75;75;75;49m█▀▀[0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m▄[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m▒░[0;38;2;75;75;75;49m█▀▀▀▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m▒░  [0;38;2;75;75;75;49m▄[0;38;2;140;255;255;49m  [0;38;2;140;255;255;48;2;0;180;185m▒░[0;38;2;75;75;75;49m█[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m▒░[0;38;2;75;75;75;49m█▀▀[0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m▄[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m▒░[0;38;2;75;75;75;49m█▀▀▀▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m▓▒[0;38;2;75;75;75;49m█▀▀▀▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m▓▒[0;38;2;75;75;75;49m█▀▀▀[0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m▄[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m▒░  [0;38;2;75;75;75;49m▄[0;38;2;140;255;255;49m  [0;38;2;140;255;255;48;2;0;180;185m▒░[0;38;2;75;75;75;49m█[0m
@@ -22,18 +34,28 @@ def print_startup_banner():
     console.print("[dim]OSINT based Passive Reconnaissance[/dim]\n")
 
 def print_scan_header(target: str):
-    console.print(f"\n[bold white]OpenRecon v{__version__}[/bold white] [dim]—[/dim] [bold cyan]{target}[/bold cyan]\n")
+    console.print(f"\n[bold white]OpenRecon v{__version__}[/bold white] [dim]—[/dim] [bold_custom_cyan]{target}[/bold_custom_cyan]\n")
+
+def print_module_heading(title: str, error: Optional[str] = None):
+    """
+    Centralized module/section heading formatter.
+    Ensures that [+] and the complete heading text use the same bold cyan/turquoise color.
+    """
+    if error:
+        console.print(f"[bold_custom_cyan][+] {title}[/bold_custom_cyan]\n    [custom_red]Error: {error}[/custom_red]")
+    else:
+        console.print(f"[bold_custom_cyan][+] {title}[/bold_custom_cyan]")
 
 def _colorize_status(status_word: str) -> str:
     if not status_word or not isinstance(status_word, str):
         return str(status_word)
     w = status_word.upper().strip()
     if w in ("VALID", "PRESENT", "OPEN", "PROTECTED", "VERIFIED", "STRICT"):
-        return f"[green]{status_word}[/green]"
+        return f"[custom_green]{status_word}[/custom_green]"
     elif "INVALID" in w or w in ("MISSING", "CLOSED", "EXPOSED", "EXPIRED", "UNTRUSTED", "HOSTNAME_MISMATCH"):
-        return f"[red]{status_word}[/red]"
+        return f"[custom_red]{status_word}[/custom_red]"
     elif w in ("WARNING", "SOFTFAIL", "OVER-PERMISSIVE", "SELF-SIGNED", "INCOMPLETE", "REDIRECT"):
-        return f"[yellow]{status_word}[/yellow]"
+        return f"[custom_yellow]{status_word}[/custom_yellow]"
     elif w in ("NOT DETECTED", "NOT ENUMERATED", "UNKNOWN", "NONE", "N/A"):
         return f"[dim]{status_word}[/dim]"
     return status_word
@@ -106,10 +128,10 @@ ABSENT_DNS_MESSAGES = {
 # 1. DNS
 def render_dns(data: Dict[str, Any]):
     if not data or "error" in data:
-        console.print(f"[bold cyan][+][/bold cyan] [bold]DNS[/bold]\n    [red]Error: {data.get('error', 'No data')}[/red]")
+        print_module_heading("DNS", error=data.get('error', 'No data'))
         return
 
-    console.print("[bold cyan][+][/bold cyan] [bold]DNS[/bold]")
+    print_module_heading("DNS")
     for rtype in ["A", "AAAA", "CNAME", "MX", "NS", "SOA", "TXT", "CAA", "SRV", "PTR"]:
         records = data.get(rtype, [])
         if records:
@@ -123,10 +145,10 @@ def render_dns(data: Dict[str, Any]):
 # 2. WHOIS
 def render_whois(data: Dict[str, Any]):
     if not data or "error" in data:
-        console.print(f"[bold cyan][+][/bold cyan] [bold]Domain Registration[/bold]\n    [red]Error: {data.get('error', 'Lookup failed')}[/red]")
+        print_module_heading("Domain Registration", error=data.get('error', 'Lookup failed'))
         return
 
-    console.print("[bold cyan][+][/bold cyan] [bold]Domain Registration[/bold]")
+    print_module_heading("Domain Registration")
     if data.get("registrar"):
         _print_kv("Registrar", str(data["registrar"]), indent=4, key_width=16)
     if data.get("registry_domain_id"):
@@ -153,10 +175,10 @@ def render_whois(data: Dict[str, Any]):
 # 3. SSL / TLS
 def render_ssl(data: Dict[str, Any]):
     if not data or "error" in data:
-        console.print(f"[bold cyan][+][/bold cyan] [bold]SSL / TLS[/bold]\n    [red]Error: {data.get('error', 'Handshake failed')}[/red]")
+        print_module_heading("SSL / TLS", error=data.get('error', 'Handshake failed'))
         return
 
-    console.print("[bold cyan][+][/bold cyan] [bold]SSL / TLS[/bold]")
+    print_module_heading("SSL / TLS")
     status_label = data.get("status_label") or ("VALID" if data.get("valid", False) else "INVALID")
     _print_kv("Status", _colorize_status(status_label), indent=4, key_width=16)
 
@@ -215,10 +237,10 @@ def render_ssl(data: Dict[str, Any]):
 # 4. Email Security
 def render_email(data: Dict[str, Any]):
     if not data or "error" in data:
-        console.print(f"[bold cyan][+][/bold cyan] [bold]Email Security[/bold]\n    [red]Error: {data.get('error', 'No data')}[/red]")
+        print_module_heading("Email Security", error=data.get('error', 'No data'))
         return
 
-    console.print("[bold cyan][+][/bold cyan] [bold]Email Security[/bold]")
+    print_module_heading("Email Security")
     spf = data.get("spf", {})
     _print_kv("SPF Record", _colorize_status(spf.get("record", "MISSING")), indent=4, key_width=16)
     if spf.get("record") in ("PRESENT", "INVALID"):
@@ -250,10 +272,10 @@ def render_email(data: Dict[str, Any]):
 # 5. HTTP
 def render_headers(data: Dict[str, Any]):
     if not data or "error" in data:
-        console.print(f"[bold cyan][+][/bold cyan] [bold]HTTP[/bold]\n    [red]Error: {data.get('error', 'Unreachable')}[/red]")
+        print_module_heading("HTTP", error=data.get('error', 'Unreachable'))
         return
 
-    console.print("[bold cyan][+][/bold cyan] [bold]HTTP[/bold]")
+    print_module_heading("HTTP")
     if data.get("url"):
         _print_kv("URL", str(data["url"]), indent=4, key_width=16)
     if data.get("status_code"):
@@ -284,10 +306,10 @@ def render_headers(data: Dict[str, Any]):
 # 6. Security Headers
 def render_security_headers(data: Dict[str, Any], show_evidence: bool = False):
     if not data or "error" in data:
-        console.print(f"[bold cyan][+][/bold cyan] [bold]Security Headers[/bold]\n    [red]Error: {data.get('error', 'Unreachable')}[/red]")
+        print_module_heading("Security Headers", error=data.get('error', 'Unreachable'))
         return
 
-    console.print("[bold cyan][+][/bold cyan] [bold]Security Headers[/bold]")
+    print_module_heading("Security Headers")
     headers_dict = data.get("headers", {})
     
     for h_name, h_info in headers_dict.items():
@@ -304,12 +326,12 @@ def render_security_headers(data: Dict[str, Any], show_evidence: bool = False):
 # 7. Subdomains
 def render_subdomains(data: Dict[str, Any]):
     if not data or "error" in data:
-        console.print(f"[bold cyan][+][/bold cyan] [bold]Subdomains[/bold]\n    [red]Error: {data.get('error', 'Lookup failed')}[/red]")
+        print_module_heading("Subdomains", error=data.get('error', 'Lookup failed'))
         return
 
     subdomains = data.get("subdomains", [])
     total = len(subdomains)
-    console.print("[bold cyan][+][/bold cyan] [bold]Subdomains[/bold]")
+    print_module_heading("Subdomains")
     _print_kv("Total", str(total), indent=4, key_width=16)
 
     for s in subdomains:
@@ -320,10 +342,10 @@ def render_subdomains(data: Dict[str, Any]):
 # 8. Technology Stack
 def render_tech(data: Dict[str, Any], show_evidence: bool = False):
     if not data or "error" in data:
-        console.print(f"[bold cyan][+][/bold cyan] [bold]Technology Stack[/bold]\n    [red]Error: {data.get('error', 'Unreachable')}[/red]")
+        print_module_heading("Technology Stack", error=data.get('error', 'Unreachable'))
         return
 
-    console.print("[bold cyan][+][/bold cyan] [bold]Technology Stack[/bold]")
+    print_module_heading("Technology Stack")
     
     if not show_evidence:
         categories = data.get("categories", {})
@@ -442,10 +464,10 @@ def render_tech(data: Dict[str, Any], show_evidence: bool = False):
 
 def render_ports(data: Dict[str, Any]):
     if not data or "error" in data:
-        console.print(f"[bold cyan][+][/bold cyan] [bold]Open Ports[/bold]\n    [red]Error: {data.get('error', 'Scan failed')}[/red]")
+        print_module_heading("Open Ports", error=data.get('error', 'Scan failed'))
         return
 
-    console.print("[bold cyan][+][/bold cyan] [bold]Open Ports[/bold]")
+    print_module_heading("Open Ports")
     open_ports = data.get("open_ports", [])
 
     if not open_ports:
@@ -462,10 +484,10 @@ def render_ports(data: Dict[str, Any]):
 # 10. Infrastructure
 def render_ip_asn(data: Dict[str, Any]):
     if not data or "error" in data:
-        console.print(f"[bold cyan][+][/bold cyan] [bold]Infrastructure[/bold]\n    [red]Error: {data.get('error', 'Lookup failed')}[/red]")
+        print_module_heading("Infrastructure", error=data.get('error', 'Lookup failed'))
         return
 
-    console.print("[bold cyan][+][/bold cyan] [bold]Infrastructure[/bold]")
+    print_module_heading("Infrastructure")
     if data.get("primary_ip"):
         _print_kv("Primary IP", str(data["primary_ip"]), indent=4, key_width=16)
     if data.get("ipv6"):
@@ -486,10 +508,10 @@ def render_ip_asn(data: Dict[str, Any]):
 # 11. Public Files
 def render_public_files(data: Dict[str, Any]):
     if not data or "error" in data:
-        console.print(f"[bold cyan][+][/bold cyan] [bold]Public Files[/bold]\n    [red]Error: {data.get('error', 'Check failed')}[/red]")
+        print_module_heading("Public Files", error=data.get('error', 'Check failed'))
         return
 
-    console.print("[bold cyan][+][/bold cyan] [bold]Public Files[/bold]")
+    print_module_heading("Public Files")
     found = data.get("found", [])
     if found:
         for f in found:
@@ -500,10 +522,10 @@ def render_public_files(data: Dict[str, Any]):
 # 12. Directory Exposure
 def render_directories(data: Dict[str, Any]):
     if not data or "error" in data:
-        console.print(f"[bold cyan][+][/bold cyan] [bold]Directory Exposure[/bold]\n    [red]Error: {data.get('error', 'Check failed')}[/red]")
+        print_module_heading("Directory Exposure", error=data.get('error', 'Check failed'))
         return
 
-    console.print("[bold cyan][+][/bold cyan] [bold]Directory Exposure[/bold]")
+    print_module_heading("Directory Exposure")
     findings = data.get("findings", [])
 
     exposed_items = []
@@ -525,11 +547,11 @@ def render_directories(data: Dict[str, Any]):
 def render_page_intel(data: Dict[str, Any], show_evidence: bool = False):
     if data is None or (isinstance(data, dict) and "error" in data):
         err = data.get("error", "Lookup failed") if isinstance(data, dict) else "Lookup failed"
-        console.print(f"[bold cyan][+][/bold cyan] [bold]Page Intelligence[/bold]\n    [red]Error: {err}[/red]")
+        print_module_heading("Page Intelligence", error=err)
         return
 
     if not show_evidence:
-        console.print("[bold cyan][+][/bold cyan] [bold]Page Intelligence[/bold]")
+        print_module_heading("Page Intelligence")
         has_findings = False
 
         # 1. API Endpoints
@@ -675,7 +697,7 @@ def render_page_intel(data: Dict[str, Any], show_evidence: bool = False):
         return
 
     # Evidence verbose mode
-    console.print("[bold cyan][+][/bold cyan] [bold]Page Intelligence[/bold]")
+    print_module_heading("Page Intelligence")
     findings = data.get("findings", [])
     if not findings:
         console.print("    No significant page intelligence found.")
@@ -718,6 +740,77 @@ def render_page_intel(data: Dict[str, Any], show_evidence: bool = False):
             console.print(f"      └─ Type: {api_type}")
 
 
+def render_email_enum(data: Dict[str, Any], show_evidence: bool = False):
+    if not data or "error" in data:
+        print_module_heading("Email Enumeration", error=data.get('error', 'Unreachable'))
+        return
+
+    emails = data.get("emails", [])
+    print_module_heading("Email Enumeration")
+    _print_kv("Total", len(emails), indent=4, key_width=16)
+    
+    for email_info in emails:
+        val = email_info.get("value") if isinstance(email_info, dict) else email_info
+        console.print(f"    {val}")
+        if show_evidence and isinstance(email_info, dict):
+            src = email_info.get("source")
+            if src:
+                console.print(f"      └─ Source: {src}")
+
+def render_social_osint(data: Dict[str, Any], show_evidence: bool = False):
+    if not data or "error" in data:
+        print_module_heading("Social Media OSINT", error=data.get('error', 'Unreachable'))
+        return
+
+    print_module_heading("Social Media OSINT")
+    
+    profiles = data.get("social_profiles", {})
+    unfiltered = data.get("unfiltered_profiles", {})
+    sources = data.get("sources", {})
+    classifications = data.get("classifications", {})
+    reasons = data.get("reasons", {})
+    
+    platforms_order = ["LinkedIn", "Instagram", "Facebook", "YouTube", "X", "GitHub", "Telegram", "Discord"]
+    target_dict = unfiltered if show_evidence else profiles
+    
+    all_platforms = list(platforms_order)
+    for p in target_dict:
+        if p not in all_platforms:
+            all_platforms.append(p)
+
+    for p in all_platforms:
+        urls = target_dict.get(p, [])
+        if not urls:
+            continue
+        if isinstance(urls, str):
+            urls = [urls]
+            
+        for idx, url in enumerate(urls):
+            if idx == 0:
+                _print_kv(p, url, indent=4, key_width=16)
+            else:
+                val_indent = " " * (4 + 16 + 1)
+                console.print(f"{val_indent}{url}")
+                
+            if show_evidence:
+                classification = classifications.get(url, "UNVERIFIED")
+                reason = reasons.get(url, "No verification details available.")
+                src = sources.get(p, {}).get(url, "")
+                
+                info_indent = " " * (4 + 16 + 3)
+                console.print(f"{info_indent}Classification: {classification}")
+                
+                import textwrap
+                wrapped_reason = textwrap.wrap(reason, width=60)
+                for r_idx, r_line in enumerate(wrapped_reason):
+                    if r_idx == 0:
+                        console.print(f"{info_indent}Reason: {r_line}")
+                    else:
+                        console.print(f"{info_indent}        {r_line}")
+                        
+                if src:
+                    console.print(f"{info_indent}Source: {src}")
+
 RENDER_MAP = {
     "dns": render_dns,
     "whois": render_whois,
@@ -731,7 +824,9 @@ RENDER_MAP = {
     "ports": render_ports,
     "ip": render_ip_asn,
     "public-files": render_public_files,
-    "directories": render_directories
+    "directories": render_directories,
+    "email-enum": render_email_enum,
+    "social": render_social_osint
 }
 
 def render_results(
@@ -756,7 +851,7 @@ def render_results(
             else:
                 func(data)
         else:
-            console.print(f"[bold cyan][+][/bold cyan] [bold]{mod_key}[/bold]")
+            print_module_heading(mod_key)
             console.print(f"    {data}")
         console.print("")
 
@@ -768,7 +863,7 @@ def render_modules_list(registry: Dict[str, Any]):
     console.print(f"\n[bold white]OpenRecon v{__version__}[/bold white] [dim]— Available Modules[/dim]\n")
     for k, v in sorted(registry.items()):
         desc = v.get("description", "")
-        console.print(f"  [bold cyan]{k:<18}[/bold cyan] [white]{desc}[/white]")
+        console.print(f"  [bold_custom_cyan]{k:<18}[/bold_custom_cyan] [white]{desc}[/white]")
     console.print("")
 
 def export_json(results: Dict[str, Any], indent: int = 2) -> str:

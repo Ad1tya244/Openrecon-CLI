@@ -67,3 +67,7 @@ AGENTS.md
 
 # Node.js dependencies
 node_modules/
+
+# Test files used by us for testing purposes
+tests/test_new_modules.py
+tests/test_cli_output.py

@@ -93,5 +93,19 @@ MODULE_REGISTRY = {
         "module": "openrecon.modules.page_intel",
         "func": "analyze_page_intel",
         "async": True
+    },
+    "email-enum": {
+        "name": "Email Enumeration",
+        "description": "Discover publicly available email addresses associated with the target domain",
+        "module": "openrecon.modules.email_enum",
+        "func": "enumerate_emails",
+        "async": True
+    },
+    "social": {
+        "name": "Social Media OSINT",
+        "description": "Discover publicly available social-media accounts associated with the target domain/organization",
+        "module": "openrecon.modules.social_osint",
+        "func": "discover_social_media",
+        "async": True
     }
 }

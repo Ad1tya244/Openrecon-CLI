@@ -4,7 +4,7 @@ import time
 import shutil
 import argparse
 import asyncio
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any
 from openrecon import __version__
 from openrecon.config import settings
 from openrecon.utils.input_validator import validate_target
@@ -22,6 +22,91 @@ from openrecon.formatter import (
 )
 
 load_dotenv()
+import json
+from dataclasses import is_dataclass, asdict
+from datetime import datetime, date
+
+class OpenReconJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        if isinstance(obj, set):
+            return sorted(list(obj))
+        if is_dataclass(obj):
+            return asdict(obj)
+        if hasattr(obj, "__dict__"):
+            return obj.__dict__
+        try:
+            return super().default(obj)
+        except TypeError:
+            return str(obj)
+
+def filter_module_data(module_name: str, raw_data: Dict[str, Any]) -> Dict[str, Any]:
+    if not isinstance(raw_data, dict):
+        return raw_data
+        
+    m_copy = dict(raw_data)
+    if module_name == "tech":
+        m_copy.pop("findings", None)
+    elif module_name == "page-intel":
+        m_copy.pop("forms_evidence", None)
+        m_copy.pop("scripts_evidence", None)
+        m_copy.pop("routes_evidence", None)
+        m_copy.pop("libraries_evidence", None)
+    elif module_name == "security-headers":
+        if "headers" in m_copy:
+            h_dict = {}
+            for h_name, h_info in m_copy["headers"].items():
+                h_dict[h_name] = {
+                    "present": h_info.get("present", False),
+                    "status": "PRESENT" if h_info.get("present", False) else "MISSING"
+                }
+            m_copy["headers"] = h_dict
+    elif module_name == "social":
+        m_copy.pop("classifications", None)
+        m_copy.pop("reasons", None)
+        m_copy.pop("unfiltered_profiles", None)
+    elif module_name == "email-enum":
+        if "emails" in m_copy:
+            m_copy["emails"] = [
+                (e.get("value") if isinstance(e, dict) else e)
+                for e in m_copy["emails"]
+            ]
+    return m_copy
+
+def filter_module_data_direct(results: Dict[str, Any]) -> Dict[str, Any]:
+    filtered = {}
+    for k, v in results.items():
+        filtered[k] = filter_module_data(k, v)
+    return filtered
+
+def filter_json_results(results: Dict[str, Any], show_evidence: bool) -> Dict[str, Any]:
+    if show_evidence:
+        return results
+
+    filtered = dict(results)
+    
+    if "modules" in filtered and isinstance(filtered["modules"], dict):
+        filtered_mods = {}
+        for mod_name, mod_data in filtered["modules"].items():
+            if isinstance(mod_data, dict):
+                m_copy = dict(mod_data)
+                raw_data = m_copy.get("data", {})
+                if isinstance(raw_data, dict):
+                    raw_data = dict(raw_data)
+                    raw_data = filter_module_data(mod_name, raw_data)
+                    m_copy["data"] = raw_data
+                else:
+                    m_copy = filter_module_data(mod_name, m_copy)
+                filtered_mods[mod_name] = m_copy
+            else:
+                filtered_mods[mod_name] = mod_data
+        filtered["modules"] = filtered_mods
+    else:
+        filtered = filter_module_data_direct(filtered)
+        
+    return filtered
+
 
 def format_modules_help() -> str:
     """Dynamically generate help text for -m / --modules from MODULE_REGISTRY."""
@@ -61,11 +146,11 @@ def resolve_modules(module_filter: Optional[str]) -> Tuple[List[str], List[str]]
 
 def validate_output_path(output_file: str) -> Tuple[bool, str]:
     """
-    Validates that the output file has a .txt extension.
+    Validates that the output file has a .txt or .json extension.
     Returns (is_valid, extension_or_error).
     """
     ext = os.path.splitext(output_file)[1]
-    if ext.lower() == ".txt":
+    if ext.lower() in (".txt", ".json"):
         return True, ext
     return False, ext if ext else "none"
 
@@ -73,13 +158,13 @@ def print_unknown_module_error(unknown: List[str]):
     """Prints a clear error message when unknown module identifiers are provided."""
     unknown_str = ", ".join(unknown)
     avail_str = ", ".join(MODULE_REGISTRY.keys())
-    err_console.print(f"[bold red][!] Unknown module:[/bold red] {unknown_str}\n")
+    err_console.print(f"[bold_custom_red][!] Unknown module:[/bold_custom_red] {unknown_str}\n")
     err_console.print(f"Available modules:\n    {avail_str}\n")
 
 def print_unsupported_output_error(ext: str):
     """Prints an error when an unsupported output format is provided."""
-    err_console.print(f"[bold red][!] Unsupported output format:[/bold red] {ext}")
-    err_console.print("    OpenRecon supports only .txt output files.\n")
+    err_console.print(f"[bold_custom_red][!] Unsupported output format:[/bold_custom_red] {ext}")
+    err_console.print("    OpenRecon supports only .txt or .json output files.\n")
 
 class OpenReconHelpFormatter(argparse.RawTextHelpFormatter):
     """
@@ -100,7 +185,6 @@ def build_parser() -> argparse.ArgumentParser:
     timeout_default = int(settings.MODULE_TIMEOUT) if settings.MODULE_TIMEOUT.is_integer() else settings.MODULE_TIMEOUT
     parser = OpenReconArgumentParser(
         prog="openrecon",
-        description="OpenRecon - OSINT based Passive Reconnaissance",
         formatter_class=OpenReconHelpFormatter,
         add_help=False,
         epilog="""
@@ -111,6 +195,7 @@ Examples:
   openrecon example.com
   openrecon example.com -m dns,ssl,tech
   openrecon example.com -o results.txt
+  openrecon example.com -o results.json
 """
     )
 
@@ -118,7 +203,7 @@ Examples:
     parser.add_argument("-v", "--version", action="version", version=f"%(prog)s v{__version__}", help="Show program's version number and exit")
     parser.add_argument("target", nargs="?", help="Target domain, public IPv4, or 'list-modules'")
     parser.add_argument("-m", "--modules", dest="module", help=format_modules_help())
-    parser.add_argument("-o", "--output", help="Save scan results to a text file (.txt only)")
+    parser.add_argument("-o", "--output", help="Save scan results to a .txt or .json file")
     parser.add_argument("-t", "--timeout", type=float, default=settings.MODULE_TIMEOUT, help=f"Timeout per module in seconds (default: {timeout_default}s)")
     parser.add_argument("--check-update", action="store_true", help="Check for available updates and exit")
     parser.add_argument("--no-update", action="store_true", help="Skip automatic update check for this invocation")
@@ -136,7 +221,7 @@ async def execute_scan(
     # 1. Validate Target
     val_res = validate_target(target)
     if not val_res.is_valid:
-        err_console.print(f"[bold red]✖ Target Validation Error:[/bold red] {val_res.error_message}")
+        err_console.print(f"[bold_custom_red]✖ Target Validation Error:[/bold_custom_red] {val_res.error_message}")
         return 1
 
     normalized_target = val_res.normalized_input or target
@@ -148,7 +233,7 @@ async def execute_scan(
         return 1
 
     if not selected_modules:
-        err_console.print("[bold red]✖ Error:[/bold red] No valid modules selected.")
+        err_console.print("[bold_custom_red]✖ Error:[/bold_custom_red] No valid modules selected.")
         return 1
 
     # 3. Validate Output File if provided
@@ -162,7 +247,7 @@ async def execute_scan(
 
     # 4. Run Scan with Rich Spinner & timing
     start_time = time.perf_counter()
-    with console.status(f"[bold cyan]Scanning target '{normalized_target}' ({len(selected_modules)} modules)...[/bold cyan]", spinner="dots"):
+    with console.status(f"[bold_custom_cyan]Scanning target '{normalized_target}' ({len(selected_modules)} modules)...[/bold_custom_cyan]", spinner="dots"):
         results = await engine.run_modules(selected_modules, normalized_target)
     elapsed = time.perf_counter() - start_time
 
@@ -172,11 +257,18 @@ async def execute_scan(
     # 6. Save to File if requested (-o)
     if output_file:
         try:
-            with open(output_file, "w", encoding="utf-8") as f:
-                f.write(export_text_report(results, elapsed_seconds=elapsed, module_count=len(selected_modules), show_evidence=show_evidence))
-            console.print(f"[bold green]✔ Results saved to:[/bold green] [white]{output_file}[/white]")
+            is_valid, ext = validate_output_path(output_file)
+            if ext.lower() == ".json":
+                filtered_results = filter_json_results(results, show_evidence)
+                serialized = json.dumps(filtered_results, cls=OpenReconJSONEncoder, indent=2)
+                with open(output_file, "w", encoding="utf-8") as f:
+                    f.write(serialized)
+            else:
+                with open(output_file, "w", encoding="utf-8") as f:
+                    f.write(export_text_report(results, elapsed_seconds=elapsed, module_count=len(selected_modules), show_evidence=show_evidence))
+            console.print(f"[bold_custom_green]✔ Results saved to:[/bold_custom_green] [white]{output_file}[/white]")
         except Exception as e:
-            err_console.print(f"[bold red]✖ Failed to save results to '{output_file}':[/bold red] {e}")
+            err_console.print(f"[bold_custom_red]✖ Failed to save results to '{output_file}':[/bold_custom_red] {e}")
             return 1
 
     return 0
@@ -239,10 +331,10 @@ def main(args_list: Optional[List[str]] = None):
             sys.exit(0)
 
     except KeyboardInterrupt:
-        err_console.print("\n[bold yellow]Scan aborted by user (Ctrl+C).[/bold yellow]")
+        err_console.print("\n[bold_custom_yellow]Scan aborted by user (Ctrl+C).[/bold_custom_yellow]")
         sys.exit(130)
     except Exception as e:
-        err_console.print(f"\n[bold red]Fatal Error:[/bold red] {str(e)}")
+        err_console.print(f"\n[bold_custom_red]Fatal Error:[/bold_custom_red] {str(e)}")
         sys.exit(1)
 
 if __name__ == "__main__":

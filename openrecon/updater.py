@@ -369,7 +369,7 @@ def run_opt_in_update_check(
 
     release_info, error_msg = fetch_latest_release_info(repo=repo)
     if error_msg:
-        console.print(f"[yellow][!] {error_msg}[/yellow]")
+        console.print(f"[custom_yellow][!] {error_msg}[/custom_yellow]")
         return None
 
     latest_tag = release_info.get("tag_name") if release_info else None
@@ -398,7 +398,7 @@ def run_opt_in_update_check(
                 console.print(f"Update complete: v{clean_latest}\n")
                 return clean_latest
             else:
-                console.print("[yellow][!] Update failed. Continuing with current version.[/yellow]\n")
+                console.print("[custom_yellow][!] Update failed. Continuing with current version.[/custom_yellow]\n")
                 return None
         else:
             return None
