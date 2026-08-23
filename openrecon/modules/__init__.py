@@ -102,7 +102,7 @@ MODULE_REGISTRY = {
         "async": True
     },
     "social": {
-        "name": "Social Media OSINT",
+        "name": "Social Media",
         "description": "Discover publicly available social-media accounts associated with the target domain/organization",
         "module": "openrecon.modules.social_osint",
         "func": "discover_social_media",

@@ -32,7 +32,7 @@ def validate_target(target: str) -> ValidationResult:
     if "://" in target:
         return ValidationResult(
             is_valid=False,
-            error_message="URLs are not accepted. Please provide a domain hostname or public IPv4 address."
+            error_message="URLs are not accepted. Please provide a domain name."
         )
     
     # Check for path separators or params
@@ -66,29 +66,20 @@ def validate_target(target: str) -> ValidationResult:
                 error_message=f"Restricted or private IP range '{target}' is not allowed for OSINT."
             )
         return ValidationResult(
-            is_valid=True, 
-            input_type="ipv4", 
-            normalized_input=str(ip), 
-            is_public=True
+            is_valid=False,
+            input_type="ipv4",
+            error_message="IPv4 targets are not accepted. Please provide a domain name."
         )
     except ipaddress.AddressValueError:
         pass
 
     # 4. Try Email
     if '@' in target:
-        email_pattern = re.compile(r'^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$')
-        if email_pattern.match(target):
-            domain_part = target.split('@')[1]
-            if domain_part in ('localhost', 'local') or domain_part.endswith('.local') or domain_part.endswith('.internal'):
-                return ValidationResult(is_valid=False, input_type="email", error_message="Internal email domain rejected.")
-            return ValidationResult(
-                is_valid=True,
-                input_type="email",
-                normalized_input=target,
-                is_public=True
-            )
-        else:
-            return ValidationResult(is_valid=False, input_type="email", error_message="Invalid email format.")
+        return ValidationResult(
+            is_valid=False,
+            input_type="email",
+            error_message="Email targets are not accepted. Please provide a domain name."
+        )
 
     # 5. Try Domain
     domain_pattern = re.compile(r'^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$')
@@ -111,5 +102,5 @@ def validate_target(target: str) -> ValidationResult:
     return ValidationResult(
         is_valid=False, 
         input_type="invalid", 
-        error_message="Invalid target format. Must be a valid public Domain, IPv4 address, or Email."
+        error_message="Invalid target format. Must be a valid public Domain."
     )

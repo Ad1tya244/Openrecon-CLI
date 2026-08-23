@@ -129,7 +129,7 @@ class TestDirectoryExposure(unittest.TestCase):
         self.assertIn("[+] Directory Exposure", output)
         self.assertIn("/backup/", output)
         self.assertIn("/uploads/", output)
-        self.assertIn("200 EXPOSED", output)
+        self.assertNotIn("200 EXPOSED", output)
         self.assertNotIn("No exposed directories found.", output)
         self.assertNotIn("200 OK", output)
 

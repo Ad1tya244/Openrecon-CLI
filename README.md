@@ -68,6 +68,9 @@ After installation, the `openrecon` command is available directly in your termin
 
 ## ⚡ Usage
 
+> [!NOTE]
+> OpenRecon accepts target domains or the `list-modules` command only (public/private IPv4 target addresses are not accepted).
+
 ```bash
 # 1. Full reconnaissance scan (runs all 13 modules concurrently)
 openrecon example.com

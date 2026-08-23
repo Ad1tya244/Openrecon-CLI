@@ -27,11 +27,41 @@ BANNER_ART = """[0;38;2;140;255;255;49m [0;38;2;140;255;255;48;2;0;180;185m▓
 [0;38;2;140;255;255;49m [0;38;2;140;255;255;48;2;0;180;185m      [0;38;2;75;75;75;49m█▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█[0;38;2;0;180;185;49m     [0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m       [0;38;2;75;75;75;49m▄[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█[0;38;2;140;255;255;49m [0;38;2;75;75;75;49m [0;38;2;140;255;255;48;2;0;180;185m    [0;38;2;75;75;75;49m█[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█[0;38;2;140;255;255;49m  [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m       [0;38;2;75;75;75;49m▄[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;140;255;255;48;2;0;180;185m      [0;38;2;75;75;75;49m▄[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;140;255;255;48;2;0;180;185m      [0;38;2;75;75;75;49m█▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;48;2;0;180;185m  [0;38;2;75;75;75;49m█[0;38;2;140;255;255;49m [0;38;2;75;75;75;49m [0;38;2;140;255;255;48;2;0;180;185m    [0;38;2;75;75;75;49m█[0m
 [0;38;2;140;255;255;49m  [0;38;2;75;75;75;49m▀▀▀▀▀▀[0;38;2;0;180;185;49m [0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀[0;38;2;0;180;185;49m     [0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀▀▀▀▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀[0;38;2;140;255;255;49m   [0;38;2;75;75;75;49m▀▀▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀[0;38;2;140;255;255;49m  [0;38;2;75;75;75;49m ▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀▀▀▀▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m  [0;38;2;75;75;75;49m▀▀▀▀▀▀[0;38;2;180;180;180;49m [0;38;2;140;255;255;49m  [0;38;2;75;75;75;49m▀▀▀▀▀▀[0;38;2;0;180;185;49m [0;38;2;180;180;180;49m [0;38;2;140;255;255;49m [0;38;2;75;75;75;49m▀▀[0;38;2;140;255;255;49m   [0;38;2;75;75;75;49m▀▀▀▀[0m
 """
+BANNER_ART = BANNER_ART.replace(
+    "0;180;185",
+    "2;209;181"
+)
 
 def print_startup_banner():
     print(BANNER_ART)
-    console.print(f"[bold white]OpenRecon v{__version__}[/bold white]")
-    console.print("[dim]OSINT based Passive Reconnaissance[/dim]\n")
+    
+    def get_clean_len(text: str) -> int:
+        import re
+        return len(re.sub(r'\[[^\]]+\]', '', text))
+
+    box_width = 56
+    inside_width = box_width - 2
+    box_padding = (86 - box_width) // 2
+    pad_spaces = ' ' * box_padding
+    
+    console.print(f"{pad_spaces}[custom_cyan]┌{'─' * inside_width}┐[/custom_cyan]", soft_wrap=True)
+    
+    lines = [
+        f"[bold_custom_cyan]OpenRecon[/bold_custom_cyan] [bold white]v{__version__}[/bold white]",
+        "[dim]OSINT based Passive Reconnaissance[/dim]",
+        "[white]https://github.com/Ad1tya244/Openrecon-CLI[/white]"
+    ]
+    
+    for line in lines:
+        v_len = get_clean_len(line)
+        pad = inside_width - v_len
+        pad_l = pad // 2
+        pad_r = pad - pad_l
+        console.print(f"{pad_spaces}[custom_cyan]│[/custom_cyan]{' ' * pad_l}{line}{' ' * pad_r}[custom_cyan]│[/custom_cyan]", soft_wrap=True)
+        
+    console.print(f"{pad_spaces}[custom_cyan]└{'─' * inside_width}┘[/custom_cyan]", soft_wrap=True)
+    print("")
+    print("")
 
 def print_scan_header(target: str):
     console.print(f"\n[bold white]OpenRecon v{__version__}[/bold white] [dim]—[/dim] [bold_custom_cyan]{target}[/bold_custom_cyan]\n")
@@ -532,14 +562,13 @@ def render_directories(data: Dict[str, Any]):
     for f in findings:
         if isinstance(f, dict):
             if f.get("is_exposed") or "EXPOSED" in f.get("status", ""):
-                exposed_items.append((f.get("path", ""), f.get("status", "200 EXPOSED")))
+                exposed_items.append(f.get("path", ""))
         elif isinstance(f, str):
-            exposed_items.append((f, "200 EXPOSED"))
+            exposed_items.append(f)
 
     if exposed_items:
-        for path, status in exposed_items:
-            colorized = f"200 {_colorize_status('EXPOSED')}" if "EXPOSED" in status else _colorize_status(status)
-            _print_kv(path, colorized, indent=4, key_width=16)
+        for path in exposed_items:
+            console.print(f"    {path}")
     else:
         console.print("    No exposed directories found.")
 
@@ -759,10 +788,10 @@ def render_email_enum(data: Dict[str, Any], show_evidence: bool = False):
 
 def render_social_osint(data: Dict[str, Any], show_evidence: bool = False):
     if not data or "error" in data:
-        print_module_heading("Social Media OSINT", error=data.get('error', 'Unreachable'))
+        print_module_heading("Social Media", error=data.get('error', 'Unreachable'))
         return
 
-    print_module_heading("Social Media OSINT")
+    print_module_heading("Social Media")
     
     profiles = data.get("social_profiles", {})
     unfiltered = data.get("unfiltered_profiles", {})
@@ -846,10 +875,10 @@ def render_results(
         if mod_key in RENDER_MAP:
             func = RENDER_MAP[mod_key]
             sig = inspect.signature(func)
+            kwargs = {}
             if "show_evidence" in sig.parameters:
-                func(data, show_evidence=show_evidence)
-            else:
-                func(data)
+                kwargs["show_evidence"] = show_evidence
+            func(data, **kwargs)
         else:
             print_module_heading(mod_key)
             console.print(f"    {data}")
@@ -863,7 +892,7 @@ def render_modules_list(registry: Dict[str, Any]):
     console.print(f"\n[bold white]OpenRecon v{__version__}[/bold white] [dim]— Available Modules[/dim]\n")
     for k, v in sorted(registry.items()):
         desc = v.get("description", "")
-        console.print(f"  [bold_custom_cyan]{k:<18}[/bold_custom_cyan] [white]{desc}[/white]")
+        console.print(f"  [bold_custom_cyan]{k:<18}[/bold_custom_cyan] [white]{desc}[/white]", soft_wrap=True)
     console.print("")
 
 def export_json(results: Dict[str, Any], indent: int = 2) -> str:

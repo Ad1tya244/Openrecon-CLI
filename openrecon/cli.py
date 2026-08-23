@@ -196,17 +196,18 @@ Examples:
   openrecon example.com -m dns,ssl,tech
   openrecon example.com -o results.txt
   openrecon example.com -o results.json
+  openrecon --check-update
+  openrecon list-modules
 """
     )
 
     parser.add_argument("-h", "--help", action="store_true", help="Show this help message and exit")
     parser.add_argument("-v", "--version", action="version", version=f"%(prog)s v{__version__}", help="Show program's version number and exit")
-    parser.add_argument("target", nargs="?", help="Target domain, public IPv4, or 'list-modules'")
+    parser.add_argument("target", nargs="?", help="Target domain or 'list-modules'")
     parser.add_argument("-m", "--modules", dest="module", help=format_modules_help())
     parser.add_argument("-o", "--output", help="Save scan results to a .txt or .json file")
     parser.add_argument("-t", "--timeout", type=float, default=settings.MODULE_TIMEOUT, help=f"Timeout per module in seconds (default: {timeout_default}s)")
     parser.add_argument("--check-update", action="store_true", help="Check for available updates and exit")
-    parser.add_argument("--no-update", action="store_true", help="Skip automatic update check for this invocation")
     parser.add_argument("-e", "--evidence", action="store_true", help="Show structured provenance and evidence matching trace")
 
     return parser

@@ -30,9 +30,9 @@ class TestOpenReconValidator(unittest.TestCase):
 
     def test_valid_ipv4(self):
         res = validate_target("8.8.8.8")
-        self.assertTrue(res.is_valid)
+        self.assertFalse(res.is_valid)
         self.assertEqual(res.input_type, "ipv4")
-        self.assertEqual(res.normalized_input, "8.8.8.8")
+        self.assertEqual(res.error_message, "IPv4 targets are not accepted. Please provide a domain name.")
 
     def test_private_ipv4_rejected(self):
         for ip in ["127.0.0.1", "192.168.1.1", "10.0.0.1", "172.16.0.1"]:
@@ -105,7 +105,7 @@ class TestCLIParser(unittest.TestCase):
         self.assertIn("openrecon list-modules", help_output)
         self.assertIn("List all available modules and descriptions", help_output)
         examples_section = help_output.split("Examples:")[-1]
-        self.assertNotIn("list-modules", examples_section)
+        self.assertIn("openrecon list-modules", examples_section)
 
     def test_default_timeout_is_60_seconds(self):
         """Verify default module timeout is exactly 60.0s."""
