@@ -31,7 +31,7 @@ It performs high-precision, evidence-based reconnaissance against target domains
 *   **🛡️ Multi-Source Passive Subdomain Discovery**: Aggregates genuine subdomains across Certificate Transparency logs and passive intelligence feeds (`crt.sh`, `certspotter`, `urlscan`, `hackertarget`, `wayback`, `rapiddns`, `anubis`) with case-insensitive deduplication, apex exclusion, zero synthetic `www.` generation, and a 50-item hard cap.
 *   **✉️ Authoritative Email Security Posture**: Evaluates single-record `SPF` with strict qualifier semantics (`-all` → `STRICT`, `~all` → `SOFTFAIL`, `?all` → `NEUTRAL`, `+all` → `OVER-PERMISSIVE`, `redirect=` → `REDIRECT`) and RFC 7208 multiple-SPF invalidation; parses `DMARC` policies (`reject`, `quarantine`, `none`), subdomain policies, rua/ruf, and percentage; reports `DKIM` presence without brute-forcing.
 *   **🔒 SSL/TLS Certificate Analysis**: Inspects certificate validity, Certificate Version (e.g. `v3`), Key Type (RSA, EC, Ed25519), Key Size (bits), Certificate Chain Status (`VERIFIED`, `SELF-SIGNED`, `UNTRUSTED`), RFC 6125 SAN hostname validation, handshake cipher suites, and TLS protocol version.
-*   **🧱 Evidence-Based Technology Fingerprinting**: Multi-signal passive inspection across HTTP response headers, cookies, scripts, CSS assets, DOM markers, `<meta>` generator tags, inline JS properties, and robots.txt across 9 standardized categories (`Web Server`, `Backend`, `Frontend`, `CMS`, `Framework`, `Runtime`, `Analytics`, `JavaScript Libraries`, `CDN / Proxy`). Reports versions only when directly observed.
+*   **🧱 Evidence-Based Technology Fingerprinting**: Multi-signal passive inspection across HTTP response headers, cookies, scripts, CSS assets, DOM markers, `<meta>` generator tags, inline JS properties, and robots.txt across 10 standardized categories (`Web Server`, `Backend`, `Frontend`, `CMS`, `Framework`, `Runtime`, `Analytics`, `JavaScript Libraries`, `CDN / Proxy`, `Fonts`). Reports versions only when directly observed.
 *   **📁 Deterministic Directory Exposure**: Tests candidate paths derived from target HTML, `robots.txt`, and `sitemap.xml`; strictly distinguishes verified directory indexing signatures (`200 EXPOSED`) from ordinary HTTP 200/401/403 pages, outputting `No exposed directories found.` when no open listings exist.
 *   **📂 Public Metadata Files Check**: Safe allowlisted discovery of `robots.txt`, `sitemap.xml`, `security.txt`, `.well-known/security.txt`, `humans.txt`, and `ads.txt` (only reporting files returning HTTP 200 OK).
 *   **🔐 HTTP Security Headers Posture**: Evaluates 8 standard headers (`Strict-Transport-Security`, `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`) with duplicate value normalization.
@@ -48,18 +48,15 @@ It performs high-precision, evidence-based reconnaissance against target domains
 
 ## 💻 Installation
 
-OpenRecon requires **Python 3.9+**.
+OpenRecon supports interactive first-time installation.
 
 ```bash
-# Navigate to the OpenRecon repository
-cd "Openrecon CLI"
+# Clone the repository and navigate into it
+git clone <repository_url>
+cd Openrecon-CLI
 
-# Create and activate a virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install OpenRecon in editable mode
-pip install -e .
+# Run the interactive setup script
+./setup.sh
 ```
 
 After installation, the `openrecon` command is available directly in your terminal.
