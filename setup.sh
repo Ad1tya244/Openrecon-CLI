@@ -160,8 +160,34 @@ fi
 
 # 6. Install OpenRecon Python dependencies
 echo "Installing OpenRecon..."
-venv/bin/pip install -e .
-echo "✓ Python dependencies installed"
+IS_UP_TO_DATE=0
+if [ -f "venv/bin/python" ]; then
+    if venv/bin/python -c "import sys; sys.path = [p for p in sys.path if p and p != '.' and p != '']; import openrecon" >/dev/null 2>&1; then
+        if venv/bin/python -c "
+import json, sys
+from openrecon.updater import is_newer_version
+with open('openrecon/data/version.json') as f:
+    local_ver = json.load(f)['version']
+sys.path = [p for p in sys.path if p and p != '.' and p != '']
+import openrecon
+installed_ver = openrecon.__version__
+if is_newer_version(installed_ver, local_ver) or installed_ver == local_ver:
+    sys.exit(0)
+else:
+    sys.exit(1)
+" >/dev/null 2>&1; then
+            IS_UP_TO_DATE=1
+        fi
+    fi
+fi
+
+if [ $IS_UP_TO_DATE -eq 1 ]; then
+    INSTALLED_VER=$(venv/bin/python -c "import sys; sys.path = [p for p in sys.path if p and p != '.' and p != '']; import openrecon; print(openrecon.__version__)")
+    echo "✓ Python dependencies installed (version $INSTALLED_VER is up to date)"
+else
+    venv/bin/pip install -e .
+    echo "✓ Python dependencies installed"
+fi
 
 # 7. Install JavaScript dependencies
 echo "Installing JavaScript dependencies..."
