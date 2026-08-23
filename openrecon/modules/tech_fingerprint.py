@@ -20,7 +20,8 @@ CATEGORY_STANDARD_MAP = {
     "databases": "Backend",
     "ui frameworks": "Frontend",
     "frontend": "Frontend",
-    "font scripts": "Frontend",
+    "font scripts": "Fonts",
+    "fonts": "Fonts",
     "cms": "CMS",
     "web frameworks": "Framework",
     "frameworks": "Framework",
@@ -49,7 +50,7 @@ def map_engine_cats_to_presentation(tech_cats: List[Dict[str, Any]], tech_name: 
     if name_lower == "ethicalads":
         return "Analytics"
     if name_lower in ("google fonts", "google font api"):
-        return "CDN / Proxy"
+        return "Fonts"
     if name_lower == "google custom search":
         return "CMS"
         
@@ -70,8 +71,10 @@ def map_engine_cats_to_presentation(tech_cats: List[Dict[str, Any]], tech_name: 
                 return "CMS"
             elif cn_lower in ("analytics", "tag managers", "surveys", "a/b testing", "rum", "browser fingerprinting", "customer data platform", "advertising"):
                 return "Analytics"
-            elif cn_lower in ("cdn", "proxy", "cdn / proxy", "hosting", "paas", "iaas", "caching", "font scripts"):
+            elif cn_lower in ("cdn", "proxy", "cdn / proxy", "hosting", "paas", "iaas", "caching"):
                 return "CDN / Proxy"
+            elif cn_lower in ("font scripts", "fonts"):
+                return "Fonts"
             elif cn_lower in ("security", "infrastructure", "security / infrastructure", "authentication", "ssl/tls certificate authorities", "containers", "operating systems", "privacy"):
                 return "Security / Infrastructure"
                 
@@ -95,8 +98,10 @@ def map_engine_cats_to_presentation(tech_cats: List[Dict[str, Any]], tech_name: 
             return "CMS"
         elif cat_id in (10, 42, 73, 74, 78, 83, 97, 76):
             return "Analytics"
-        elif cat_id in (31, 88, 62, 63, 23, 17):
+        elif cat_id in (31, 88, 62, 63, 23):
             return "CDN / Proxy"
+        elif cat_id == 17:
+            return "Fonts"
         elif cat_id in (16, 69, 70, 60, 28, 95):
             return "Security / Infrastructure"
             
@@ -115,8 +120,10 @@ def map_engine_cats_to_presentation(tech_cats: List[Dict[str, Any]], tech_name: 
             return "CMS"
         elif fc_lower in ("analytics", "advertising"):
             return "Analytics"
-        elif fc_lower in ("cdn", "proxy", "cdn / proxy", "hosting", "font scripts"):
+        elif fc_lower in ("cdn", "proxy", "cdn / proxy", "hosting"):
             return "CDN / Proxy"
+        elif fc_lower in ("font scripts", "fonts"):
+            return "Fonts"
         elif fc_lower in ("security", "infrastructure", "security / infrastructure", "operating systems", "privacy"):
             return "Security / Infrastructure"
             

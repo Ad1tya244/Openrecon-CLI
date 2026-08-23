@@ -382,7 +382,7 @@ def render_tech(data: Dict[str, Any], show_evidence: bool = False):
         preferred_order = [
             "Web Server", "Backend", "Frontend frameworks/libraries",
             "JavaScript Libraries", "CMS", "Analytics", "CDN / Proxy",
-            "Security / Infrastructure", "Web standards / metadata"
+            "Fonts", "Security / Infrastructure", "Web standards / metadata"
         ]
         category_mappings = {
             "Frontend frameworks/libraries": "Frontend",
@@ -437,7 +437,7 @@ def render_tech(data: Dict[str, Any], show_evidence: bool = False):
     preferred_order = [
         "Web Server", "Backend", "Frontend frameworks/libraries",
         "JavaScript Libraries", "CMS", "Analytics", "CDN / Proxy",
-        "Security / Infrastructure", "Web standards / metadata"
+        "Fonts", "Security / Infrastructure", "Web standards / metadata"
     ]
 
     all_cats = preferred_order + [c for c in categories_dict.keys() if c not in preferred_order]
