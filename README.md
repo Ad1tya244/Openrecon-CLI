@@ -57,6 +57,9 @@ cd Openrecon-CLI
 
 # Run the interactive setup script
 ./setup.sh
+
+# Activate venv
+source venv/bin/activate
 ```
 
 After installation, the `openrecon` command is available directly in your terminal.

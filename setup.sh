@@ -165,11 +165,7 @@ echo "✓ Python dependencies installed"
 
 # 7. Install JavaScript dependencies
 echo "Installing JavaScript dependencies..."
-if [ -f "package-lock.json" ]; then
-    npm ci
-else
-    npm install
-fi
+npm install
 echo "✓ JavaScript dependencies installed"
 
 # 8. Verify JavaScript dependencies load
@@ -186,5 +182,5 @@ echo "OpenRecon setup completed successfully."
 echo ""
 echo "Run:"
 echo "  source venv/bin/activate"
-echo "  openrecon example.com"
+echo "  openrecon"
 echo ""
