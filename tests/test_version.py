@@ -18,46 +18,50 @@ import openrecon.formatter
 
 class TestVersioningSystem(unittest.TestCase):
     def test_version_calculation_formula(self):
-        # 0 -> 1.0.0
-        self.assertEqual(calculate_version(0), "1.0.0")
-        # 1 -> 1.0.1
-        self.assertEqual(calculate_version(1), "1.0.1")
-        # 9 -> 1.0.9
-        self.assertEqual(calculate_version(9), "1.0.9")
-        # 10 -> 1.1.0
-        self.assertEqual(calculate_version(10), "1.1.0")
-        # 11 -> 1.1.1
-        self.assertEqual(calculate_version(11), "1.1.1")
-        # 19 -> 1.1.9
-        self.assertEqual(calculate_version(19), "1.1.9")
-        # 20 -> 1.2.0
-        self.assertEqual(calculate_version(20), "1.2.0")
+        # 0 -> 0.0.0
+        self.assertEqual(calculate_version(0), "0.0.0")
+        # 1 -> 0.0.1
+        self.assertEqual(calculate_version(1), "0.0.1")
+        # 9 -> 0.0.9
+        self.assertEqual(calculate_version(9), "0.0.9")
+        # 10 -> 0.1.0
+        self.assertEqual(calculate_version(10), "0.1.0")
+        # 11 -> 0.1.1
+        self.assertEqual(calculate_version(11), "0.1.1")
+        # 19 -> 0.1.9
+        self.assertEqual(calculate_version(19), "0.1.9")
+        # 20 -> 0.2.0
+        self.assertEqual(calculate_version(20), "0.2.0")
         # Additional boundary cases
-        self.assertEqual(calculate_version(25), "1.2.5")
-        self.assertEqual(calculate_version(99), "1.9.9")
-        self.assertEqual(calculate_version(100), "1.10.0")
+        self.assertEqual(calculate_version(25), "0.2.5")
+        self.assertEqual(calculate_version(99), "0.9.9")
+        self.assertEqual(calculate_version(100), "1.0.0")
+        self.assertEqual(calculate_version(199), "1.9.9")
+        self.assertEqual(calculate_version(200), "2.0.0")
+        self.assertEqual(calculate_version(216), "2.1.6")
+        self.assertEqual(calculate_version(999), "9.9.9")
 
     def test_persistence_and_file_loading(self):
         with tempfile.NamedTemporaryFile("w+", delete=False) as f:
-            json.dump({"change_count": 14, "version": "1.1.4"}, f)
+            json.dump({"change_count": 114, "version": "1.1.4"}, f)
             f_path = f.name
 
         try:
-            self.assertEqual(get_change_count(f_path), 14)
+            self.assertEqual(get_change_count(f_path), 114)
             self.assertEqual(get_version(f_path), "1.1.4")
 
             # Increment count in custom file
             new_count, new_ver = increment_change_count(f_path)
-            self.assertEqual(new_count, 15)
+            self.assertEqual(new_count, 115)
             self.assertEqual(new_ver, "1.1.5")
-            self.assertEqual(get_change_count(f_path), 15)
+            self.assertEqual(get_change_count(f_path), 115)
             self.assertEqual(get_version(f_path), "1.1.5")
 
             # Set explicit count in custom file
-            set_count, set_ver = set_change_count(20, f_path)
-            self.assertEqual(set_count, 20)
+            set_count, set_ver = set_change_count(120, f_path)
+            self.assertEqual(set_count, 120)
             self.assertEqual(set_ver, "1.2.0")
-            self.assertEqual(get_change_count(f_path), 20)
+            self.assertEqual(get_change_count(f_path), 120)
             self.assertEqual(get_version(f_path), "1.2.0")
         finally:
             os.unlink(f_path)

@@ -165,11 +165,11 @@ if [ -f "venv/bin/python" ]; then
     if venv/bin/python -c "import sys; sys.path = [p for p in sys.path if p and p != '.' and p != '']; import openrecon" >/dev/null 2>&1; then
         if venv/bin/python -c "
 import json, sys
+sys.path = [p for p in sys.path if p and p != '.' and p != '']
+import openrecon
 from openrecon.updater import is_newer_version
 with open('openrecon/data/version.json') as f:
     local_ver = json.load(f)['version']
-sys.path = [p for p in sys.path if p and p != '.' and p != '']
-import openrecon
 installed_ver = openrecon.__version__
 if is_newer_version(installed_ver, local_ver) or installed_ver == local_ver:
     sys.exit(0)

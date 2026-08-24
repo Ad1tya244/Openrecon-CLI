@@ -5,23 +5,21 @@ import os
 import json
 from typing import Tuple, Optional
 
-MAJOR_VERSION = 1
 DEFAULT_VERSION_FILE = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "data", "version.json")
 )
 
 def calculate_version(change_count: int) -> str:
     """
-    Calculates semantic version from change count using the formula:
-      major = 1
-      minor = change_count // 10
+    Calculates semantic version from change count using the three single-digit version components:
+      major = (change_count // 100) % 10
+      minor = (change_count // 10) % 10
       patch = change_count % 10
-      version = f"{major}.{minor}.{patch}"
     """
     if change_count < 0:
         change_count = 0
-    major = MAJOR_VERSION
-    minor = change_count // 10
+    major = (change_count // 100) % 10
+    minor = (change_count // 10) % 10
     patch = change_count % 10
     return f"{major}.{minor}.{patch}"
 
