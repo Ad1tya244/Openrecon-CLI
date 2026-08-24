@@ -72,7 +72,7 @@ After installation, the `openrecon` command is available directly in your termin
 > OpenRecon accepts target domains or the `list-modules` command only (public/private IPv4 target addresses are not accepted).
 
 ```bash
-# 1. Full reconnaissance scan (runs all 13 modules concurrently)
+# 1. Full reconnaissance scan (runs all 15 modules concurrently)
 openrecon example.com
 
 # 2. Targeted module scan (-m / --modules)
@@ -125,7 +125,7 @@ openrecon --help
 
 ## 🧪 Running Tests
 
-OpenRecon includes a comprehensive automated test suite covering all 13 modules, version tracking, CLI options, updater diagnostics, cross-module consistency, and regression checks:
+OpenRecon includes a comprehensive automated test suite covering all 15 modules, version tracking, CLI options, updater diagnostics, cross-module consistency, and regression checks:
 
 ```bash
 venv/bin/python -m unittest discover tests

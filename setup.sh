@@ -162,10 +162,11 @@ fi
 echo "Installing OpenRecon..."
 IS_UP_TO_DATE=0
 if [ -f "venv/bin/python" ]; then
-    if venv/bin/python -c "import sys; sys.path = [p for p in sys.path if p and p != '.' and p != '']; import openrecon" >/dev/null 2>&1; then
+    if venv/bin/python -c "import sys, os; cwd = os.path.abspath(os.getcwd()); sys.path = [p for p in sys.path if p and p != '.' and p != '' and os.path.abspath(p) != cwd]; import openrecon" >/dev/null 2>&1; then
         if venv/bin/python -c "
-import json, sys
-sys.path = [p for p in sys.path if p and p != '.' and p != '']
+import json, sys, os
+cwd = os.path.abspath(os.getcwd())
+sys.path = [p for p in sys.path if p and p != '.' and p != '' and os.path.abspath(p) != cwd]
 import openrecon
 from openrecon.updater import is_newer_version
 with open('openrecon/data/version.json') as f:
@@ -182,7 +183,7 @@ else:
 fi
 
 if [ $IS_UP_TO_DATE -eq 1 ]; then
-    INSTALLED_VER=$(venv/bin/python -c "import sys; sys.path = [p for p in sys.path if p and p != '.' and p != '']; import openrecon; print(openrecon.__version__)")
+    INSTALLED_VER=$(venv/bin/python -c "import sys, os; cwd = os.path.abspath(os.getcwd()); sys.path = [p for p in sys.path if p and p != '.' and p != '' and os.path.abspath(p) != cwd]; import openrecon; print(openrecon.__version__)")
     echo "✓ Python dependencies installed (version $INSTALLED_VER is up to date)"
 else
     venv/bin/pip install -e .

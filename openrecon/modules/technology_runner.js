@@ -35,7 +35,10 @@ try {
 // Load JSDOM from local workspace node_modules
 let JSDOM;
 try {
-  const jsdomPath = path.resolve(__dirname, '../../node_modules/jsdom');
+  const nodeModulesDir = process.env.OPENRECON_NODE_MODULES;
+  const jsdomPath = nodeModulesDir
+    ? path.resolve(nodeModulesDir, 'jsdom')
+    : path.resolve(__dirname, '../../node_modules/jsdom');
   JSDOM = require(jsdomPath).JSDOM;
 } catch (e) {
   try {

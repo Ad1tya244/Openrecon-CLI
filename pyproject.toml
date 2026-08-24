@@ -42,4 +42,4 @@ where = ["."]
 include = ["openrecon*"]
 
 [tool.setuptools.package-data]
-openrecon = ["data/*.json"]
+openrecon = ["data/*.json", "modules/*.js"]

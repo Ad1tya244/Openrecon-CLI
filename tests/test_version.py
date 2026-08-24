@@ -38,7 +38,7 @@ class TestVersioningSystem(unittest.TestCase):
         self.assertEqual(calculate_version(100), "1.0.0")
         self.assertEqual(calculate_version(199), "1.9.9")
         self.assertEqual(calculate_version(200), "2.0.0")
-        self.assertEqual(calculate_version(216), "2.1.6")
+        self.assertEqual(calculate_version(217), "2.1.7")
         self.assertEqual(calculate_version(999), "9.9.9")
 
     def test_persistence_and_file_loading(self):

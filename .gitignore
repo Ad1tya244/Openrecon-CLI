@@ -59,8 +59,8 @@ Thumbs.db
 !assets/*
 
 # Folders
-*atana-dev/
-*ppalyzer-main/
+katana-dev/
+wappalyzer-main/
 
 # Agent file
 AGENTS.md

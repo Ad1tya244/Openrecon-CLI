@@ -913,6 +913,37 @@ def enrich_versions_from_custom_rules(detections: List[Dict[str, Any]], tech_ite
     return detections
 
 
+def find_node_modules() -> Optional[str]:
+    import sys
+    # 1. Parents of this file (works in editable mode)
+    cur_dir = os.path.dirname(os.path.abspath(__file__))
+    workspace_root = os.path.abspath(os.path.join(cur_dir, "..", ".."))
+    path_opt = os.path.join(workspace_root, "node_modules")
+    if os.path.isdir(path_opt):
+        return path_opt
+
+    # 2. Parent of sys.prefix (works in static mode inside venv)
+    if hasattr(sys, "prefix"):
+        venv_root = sys.prefix
+        parent_of_venv = os.path.abspath(os.path.join(venv_root, ".."))
+        path_opt = os.path.join(parent_of_venv, "node_modules")
+        if os.path.isdir(path_opt):
+            return path_opt
+
+    # 3. Parents of current working directory
+    cwd = os.getcwd()
+    while True:
+        path_opt = os.path.join(cwd, "node_modules")
+        if os.path.isdir(path_opt):
+            return path_opt
+        parent = os.path.dirname(cwd)
+        if parent == cwd:
+            break
+        cwd = parent
+
+    return None
+
+
 def identify_technologies(
     headers: Dict[str, Any],
     html: str,
@@ -942,6 +973,15 @@ def identify_technologies(
     res = []
     raw_detections = []
     # 1. Run Node-based technology engine
+    node_env = os.environ.copy()
+    node_modules_dir = find_node_modules()
+    if node_modules_dir:
+        node_env["OPENRECON_NODE_MODULES"] = node_modules_dir
+        if "NODE_PATH" in node_env:
+            node_env["NODE_PATH"] = f"{node_modules_dir}{os.pathsep}{node_env['NODE_PATH']}"
+        else:
+            node_env["NODE_PATH"] = node_modules_dir
+
     try:
         runner_path = os.path.join(os.path.dirname(__file__), "technology_runner.js")
         proc = subprocess.run(
@@ -949,6 +989,7 @@ def identify_technologies(
             input=json.dumps(tech_items),
             capture_output=True,
             text=True,
+            env=node_env,
             check=True
         )
         raw_res = json.loads(proc.stdout)
@@ -958,8 +999,19 @@ def identify_technologies(
         else:
             res = raw_res
         res = enrich_versions_from_custom_rules(res, tech_items, fingerprints or load_fingerprints())
+    except subprocess.CalledProcessError as e:
+        from openrecon.formatter import err_console
+        import sys
+        err_console.print("[custom_yellow]⚠ Warning: Technology Stack Node engine failed to execute. Detection will continue with reduced accuracy using offline signatures.[/custom_yellow]")
+        if "-e" in sys.argv or "--evidence" in sys.argv:
+            detailed_err = e.stderr or e.stdout or str(e)
+            err_console.print(f"[custom_red][tech-engine-error]: Node runner failed with exit code {e.returncode}. Details: {detailed_err.strip()}[/custom_red]")
     except Exception as e:
-        pass
+        from openrecon.formatter import err_console
+        import sys
+        err_console.print("[custom_yellow]⚠ Warning: Technology Stack Node engine failed to execute. Detection will continue with reduced accuracy using offline signatures.[/custom_yellow]")
+        if "-e" in sys.argv or "--evidence" in sys.argv:
+            err_console.print(f"[custom_red][tech-engine-error]: {str(e)}[/custom_red]")
 
     # Map raw_detections directly to their resolved counterparts
     for r in res:
