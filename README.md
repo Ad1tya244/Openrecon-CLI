@@ -20,7 +20,7 @@
 
 **OpenRecon** is a modern, modular, non-intrusive local OSINT (Open Source Intelligence) command-line reconnaissance tool built for security researchers, penetration testers, and system administrators.
 
-It performs high-precision, evidence-based reconnaissance against target domains and IP addresses without using noisy wordlists, aggressive brute-forcing, or disruptive scanners. Every reported observation is strictly derived from direct protocol handshakes, DNS records, HTTP responses, certificate metadata, and passive intelligence sources.
+It performs high-precision, evidence-based reconnaissance against target domains without using noisy wordlists, aggressive brute-forcing, or disruptive scanners. Every reported observation is strictly derived from direct protocol handshakes, DNS records, HTTP responses, certificate metadata, and passive intelligence sources.
 
 ---
 
