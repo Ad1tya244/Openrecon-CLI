@@ -205,11 +205,14 @@ async def enumerate_subdomains(domain: str) -> Dict[str, Any]:
             unique_subdomains.add(clean)
 
     # Sort alphabetically and cap at MAX_SUBDOMAINS (50)
+    total_found = len(unique_subdomains)
     sorted_subdomains = sorted(list(unique_subdomains))[:MAX_SUBDOMAINS]
 
     subdomain_objects = [{"hostname": s} for s in sorted_subdomains]
 
+    total_val = f"{MAX_SUBDOMAINS}+" if total_found >= MAX_SUBDOMAINS else total_found
+
     return {
         "subdomains": subdomain_objects,
-        "total": len(sorted_subdomains)
+        "total": total_val
     }

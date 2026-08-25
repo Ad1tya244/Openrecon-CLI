@@ -356,11 +356,11 @@ def render_security_headers(data: Dict[str, Any], show_evidence: bool = False):
 # 7. Subdomains
 def render_subdomains(data: Dict[str, Any]):
     if not data or "error" in data:
-        print_module_heading("Subdomains", error=data.get('error', 'Lookup failed'))
+        print_module_heading("Subdomains", error=data.get('error', "Lookup failed"))
         return
 
     subdomains = data.get("subdomains", [])
-    total = len(subdomains)
+    total = data.get("total", len(subdomains))
     print_module_heading("Subdomains")
     _print_kv("Total", str(total), indent=4, key_width=16)
 

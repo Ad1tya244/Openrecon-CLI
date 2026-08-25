@@ -57,7 +57,7 @@ class TestSubdomainNormalization(unittest.TestCase):
             total = res["total"]
             
             self.assertEqual(len(subdomains), 50)
-            self.assertEqual(total, 50)
+            self.assertEqual(total, "50+")
             self.assertEqual(MAX_SUBDOMAINS, 50)
 
     def test_render_subdomains_output(self):
