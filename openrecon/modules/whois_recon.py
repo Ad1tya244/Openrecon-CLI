@@ -30,30 +30,40 @@ def is_redacted_value(val: Optional[str]) -> bool:
             return True
     return False
 
-def get_whois_server(domain: str) -> str:
+def get_whois_server(domain: str) -> Optional[str]:
     """Finds the appropriate whois server for a domain."""
-    tld = domain.split('.')[-1]
+    tld = domain.split(".")[-1].lower()
     servers = {
-        'com': 'whois.verisign-grs.com',
-        'net': 'whois.verisign-grs.com',
-        'org': 'whois.pir.org',
-        'io': 'whois.nic.io',
-        'co': 'whois.nic.co',
-        'uk': 'whois.nic.uk',
-        'jp': 'whois.jprs.jp',
-        'in': 'whois.nixiregistry.in',
-        'de': 'whois.denic.de',
-        'ca': 'whois.cira.ca',
-        'eu': 'whois.eu',
-        'me': 'whois.nic.me',
-        'ai': 'whois.nic.ai',
-        'dev': 'whois.nic.google',
-        'app': 'whois.nic.google',
+        "com": "whois.verisign-grs.com",
+        "net": "whois.verisign-grs.com",
+        "org": "whois.pir.org",
+        "edu": "whois.educause.edu",
+        "gov": "whois.nic.gov",
+        "io": "whois.nic.io",
+        "co": "whois.nic.co",
+        "uk": "whois.nic.uk",
+        "jp": "whois.jprs.jp",
+        "in": "whois.nixiregistry.in",
+        "de": "whois.denic.de",
+        "ca": "whois.cira.ca",
+        "eu": "whois.eu",
+        "me": "whois.nic.me",
+        "ai": "whois.nic.ai",
+        "dev": "whois.nic.google",
+        "app": "whois.nic.google",
     }
-    if domain.endswith('.ac.in') or domain.endswith('.co.in') or domain.endswith('.net.in') or domain.endswith('.org.in'):
-        return 'whois.nixiregistry.in'
+    if domain.endswith(".ac.in") or domain.endswith(".co.in") or domain.endswith(".net.in") or domain.endswith(".org.in"):
+        return "whois.nixiregistry.in"
 
-    return servers.get(tld, f"whois.nic.{tld}")
+    if tld in servers:
+        return servers[tld]
+
+    server = f"whois.nic.{tld}"
+    try:
+        socket.gethostbyname(server)
+        return server
+    except socket.gaierror:
+        return None
 
 def parse_date(date_str: str) -> Optional[datetime]:
     """Attempts to parse WHOIS date strings in various formats."""
@@ -125,21 +135,24 @@ def parse_whois_data(raw_text: str) -> Dict[str, Any]:
             r"Created:\s*(.+)",
             r"Registered on:\s*(.+)",
             r"created:\s*(.+)",
-            r"Created On:\s*(.+)"
+            r"Created On:\s*(.+)",
+            r"Domain record activated:\s*(.+)"
         ],
         "updated_date": [
             r"Updated Date:\s*(.+)",
             r"Last Updated On:\s*(.+)",
             r"modified:\s*(.+)",
             r"last-update:\s*(.+)",
-            r"Last Modified:\s*(.+)"
+            r"Last Modified:\s*(.+)",
+            r"Domain record last updated:\s*(.+)"
         ],
         "expiration_date": [
             r"Registry Expiry Date:\s*(.+)",
             r"Expiration Date:\s*(.+)",
             r"Expiry date:\s*(.+)",
             r"paid-till:\s*(.+)",
-            r"Expires On:\s*(.+)"
+            r"Expires On:\s*(.+)",
+            r"Domain expires:\s*(.+)"
         ],
         "registrant": [
             r"Registrant Organization:\s*(.+)",
@@ -171,7 +184,16 @@ def parse_whois_data(raw_text: str) -> Dict[str, Any]:
                 unique_statuses.append(st_clean)
         data["status"] = unique_statuses[:3] if unique_statuses else None
 
-    # Calculate Age
+    # Calculate Age & Normalize Date Formats for Formatter
+    for key in ["creation_date", "updated_date", "expiration_date"]:
+        if data[key]:
+            dt = parse_date(data[key])
+            if dt:
+                if "T" in data[key] or ":" in data[key]:
+                    data[key] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+                else:
+                    data[key] = dt.strftime("%Y-%m-%d")
+
     if data["creation_date"]:
         created_dt = parse_date(data["creation_date"])
         if created_dt:
@@ -185,6 +207,11 @@ def parse_whois_data(raw_text: str) -> Dict[str, Any]:
 def get_whois_info(domain: str) -> Dict[str, Any]:
     """Retrieves and parses WHOIS info using raw sockets."""
     server = get_whois_server(domain)
+    if not server:
+        tld = domain.split(".")[-1].lower()
+        return {
+            "error": f"Cannot determine a valid WHOIS server for TLD .{tld}"
+        }
     
     try:
         with socket.create_connection((server, 43), timeout=settings.SOCKET_TIMEOUT) as sock:

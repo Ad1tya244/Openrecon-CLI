@@ -49,6 +49,16 @@ Registrant Name: Privacy service provided by Withheld for Privacy ehf
         self.assertTrue(is_redacted_value("GDPR Masked"))
         self.assertFalse(is_redacted_value("Google LLC"))
 
+    def test_whois_server_mapping(self):
+        from openrecon.modules.whois_recon import get_whois_server
+        self.assertEqual(get_whois_server("example.edu"), "whois.educause.edu")
+        self.assertEqual(get_whois_server("example.com"), "whois.verisign-grs.com")
+        self.assertEqual(get_whois_server("example.org"), "whois.pir.org")
+        self.assertEqual(get_whois_server("example.in"), "whois.nixiregistry.in")
+        self.assertEqual(get_whois_server("example.ac.in"), "whois.nixiregistry.in")
+        self.assertEqual(get_whois_server("example.gov"), "whois.nic.gov")
+        self.assertIsNone(get_whois_server("example.invalidtld"))
+
     def test_render_whois_output(self):
         data = {
             "registrar": "GoDaddy.com, LLC",

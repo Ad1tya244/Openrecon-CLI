@@ -49,6 +49,8 @@ def _resolve_and_validate(hostname: str) -> str:
     
     raise SafeHTTPError(f"No valid IPs found for resolution of {hostname}")
 
+FAILED_HTTP_HOSTS = set()
+
 async def safe_request(method: str, url: str, extra_headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
     """
     Performs a secure HTTP request (GET or HEAD).
@@ -59,6 +61,13 @@ async def safe_request(method: str, url: str, extra_headers: Optional[Dict[str, 
     - Handles redirects safely.
     - Captures exact HTTP version, headers, status code, and cookies.
     """
+    parsed = urlparse(url)
+    if parsed.scheme == "http" and parsed.hostname in FAILED_HTTP_HOSTS:
+        return {
+            "error": f"HTTP fallback previously failed for host {parsed.hostname}",
+            "error_type": "CACHED_HTTP_FAILURE"
+        }
+
     retries = 2
     base_delay = 0.5
     timeout = httpx.Timeout(READ_TIMEOUT, connect=CONNECT_TIMEOUT)
@@ -88,6 +97,20 @@ async def safe_request(method: str, url: str, extra_headers: Optional[Dict[str, 
                     if initial_status is None:
                         initial_status = response.status_code
                     
+                    if response.status_code in (403, 429):
+                        await response.aclose()
+                        parsed_current = urlparse(current_url)
+                        if parsed_current.scheme == "http":
+                            FAILED_HTTP_HOSTS.add(parsed_current.hostname)
+                        return {
+                            "error": f"Target returned inaccessible/unavailable status code: {response.status_code}",
+                            "status_code": response.status_code,
+                            "error_type": "INACCESSIBLE",
+                            "headers": dict(response.headers),
+                            "content_text": "",
+                            "url": current_url
+                        }
+
                     # Size Limit Check (For GET)
                     content_chunks = []
                     total_size = 0
@@ -142,13 +165,36 @@ async def safe_request(method: str, url: str, extra_headers: Optional[Dict[str, 
     
                 raise SafeHTTPError("Max redirects exceeded")
 
-        except (httpx.ConnectError, httpx.ReadTimeout, httpx.PoolTimeout, httpx.NetworkError, httpx.RemoteProtocolError) as e:
+        except (httpx.ConnectTimeout, httpx.ReadTimeout, httpx.WriteTimeout, httpx.PoolTimeout) as e:
             if attempt < retries - 1:
                 await asyncio.sleep(base_delay * (attempt + 1))
                 continue
-            return {"error": f"Request failed after {retries} attempts: {str(e)}"}
+            parsed_err = urlparse(url)
+            if parsed_err.scheme == "http":
+                FAILED_HTTP_HOSTS.add(parsed_err.hostname)
+            return {
+                "error": f"Request timed out: {str(e)}",
+                "error_type": "TIMEOUT"
+            }
+        except (httpx.ConnectError, httpx.NetworkError, httpx.RemoteProtocolError) as e:
+            if attempt < retries - 1:
+                await asyncio.sleep(base_delay * (attempt + 1))
+                continue
+            parsed_err = urlparse(url)
+            if parsed_err.scheme == "http":
+                FAILED_HTTP_HOSTS.add(parsed_err.hostname)
+            return {
+                "error": f"Connection failed: {str(e)}",
+                "error_type": "CONNECTION_FAILURE"
+            }
         except Exception as e:
-            return {"error": str(e)}
+            parsed_err = urlparse(url)
+            if parsed_err.scheme == "http":
+                FAILED_HTTP_HOSTS.add(parsed_err.hostname)
+            return {
+                "error": str(e),
+                "error_type": "UNKNOWN_ERROR"
+            }
     
     return {"error": "Request failed"}
 

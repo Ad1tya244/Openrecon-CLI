@@ -807,10 +807,12 @@ def render_social_osint(data: Dict[str, Any], show_evidence: bool = False):
         if p not in all_platforms:
             all_platforms.append(p)
 
+    has_any = False
     for p in all_platforms:
         urls = target_dict.get(p, [])
         if not urls:
             continue
+        has_any = True
         if isinstance(urls, str):
             urls = [urls]
             
@@ -839,6 +841,9 @@ def render_social_osint(data: Dict[str, Any], show_evidence: bool = False):
                         
                 if src:
                     console.print(f"{info_indent}Source: {src}")
+
+    if not has_any:
+        console.print("    Not found")
 
 RENDER_MAP = {
     "dns": render_dns,
